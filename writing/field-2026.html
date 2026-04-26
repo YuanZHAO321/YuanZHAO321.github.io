@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="zh" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>那时候你还不知道 — Yuan Zhao · 赵元</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;1,9..144,300;1,9..144,400&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+SC:wght@300;400;500&display=swap" rel="stylesheet">
+
+  <style>
+    /* ── Tokens ── */
+    :root {
+      --bg:        #f6f3ec;
+      --bg-elev:   #fbf9f4;
+      --ink:       #1a1814;
+      --ink-soft:  #4a463e;
+      --ink-mute:  #8a8378;
+      --rule:      #d9d3c5;
+      --accent:    #a85a2a;
+      --selection: #a85a2a33;
+
+      --f-display: "Fraunces", "Times New Roman", serif;
+      --f-mono:    "JetBrains Mono", ui-monospace, monospace;
+      --f-cjk:     "Noto Serif SC", "Songti SC", serif;
+
+      --col-text: 660px;
+      --gutter:   28px;
+    }
+
+    [data-theme="dark"] {
+      --bg:       #14130f;
+      --bg-elev:  #1c1a16;
+      --ink:      #f0ebde;
+      --ink-soft: #c4bdab;
+      --ink-mute: #807a6c;
+      --rule:     #2c2a24;
+      --selection:#ffffff22;
+    }
+
+    /* ── Reset ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html {
+      background: var(--bg);
+      color: var(--ink);
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      scroll-behavior: smooth;
+      transition: background 240ms ease, color 240ms ease;
+    }
+    body {
+      min-height: 100vh;
+      overflow-x: hidden;
+      /* subtle grain overlay */
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    }
+    ::selection { background: var(--selection); color: inherit; }
+    a { color: inherit; text-decoration: none; }
+
+    /* ── Cursor ── */
+    body { cursor: none; }
+    @media (max-width: 720px) { body { cursor: auto; } }
+    .cursor-dot, .cursor-ring {
+      position: fixed; top: 0; left: 0;
+      pointer-events: none; z-index: 100;
+      mix-blend-mode: difference; will-change: transform;
+    }
+    .cursor-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: #f0ebde; transform: translate(-50%,-50%);
+    }
+    .cursor-ring {
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 1px solid #f0ebde; transform: translate(-50%,-50%);
+      transition: width 200ms ease, height 200ms ease, border-color 200ms ease;
+    }
+    .cursor-ring.active { width: 52px; height: 52px; border-color: var(--accent); }
+    @media (max-width: 720px) { .cursor-dot, .cursor-ring { display: none; } }
+
+    /* ── Nav ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      background: color-mix(in oklab, var(--bg) 78%, transparent);
+      border-bottom: 1px solid transparent;
+      transition: border-color 200ms ease;
+    }
+    nav.scrolled { border-bottom-color: var(--rule); }
+    .nav-inner {
+      max-width: 1000px; margin: 0 auto;
+      padding: 14px var(--gutter);
+      display: flex; align-items: center; justify-content: space-between; gap: 24px;
+    }
+    .brand {
+      font-family: var(--f-display); font-size: 17px; font-weight: 400;
+      letter-spacing: -0.005em; display: flex; align-items: center; gap: 10px;
+    }
+    .brand-mark {
+      width: 20px; height: 20px; border-radius: 50%;
+      background: var(--accent); flex-shrink: 0;
+    }
+    .brand-cn { font-family: var(--f-cjk); color: var(--ink-soft); font-size: 13px; }
+    .nav-right {
+      display: flex; align-items: center; gap: 20px;
+      font-family: var(--f-mono); font-size: 11px;
+      letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-mute);
+    }
+    .nav-back { transition: color 160ms ease; }
+    .nav-back:hover { color: var(--accent); }
+    .theme-btn {
+      background: none; border: 1px solid var(--rule); cursor: pointer;
+      font: inherit; color: inherit; padding: 5px 10px; border-radius: 999px;
+      font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--ink-soft);
+      transition: border-color 200ms ease, color 200ms ease;
+    }
+    .theme-btn:hover { border-color: var(--accent); color: var(--ink); }
+
+    /* ── Page shell ── */
+    .page { max-width: 1000px; margin: 0 auto; padding: 0 var(--gutter); }
+
+    /* ── Article header ── */
+    .article-header {
+      padding: calc(96px + 56px) 0 72px;
+      border-bottom: 1px solid var(--rule);
+    }
+    .article-eyebrow {
+      font-family: var(--f-mono); font-size: 11px;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--ink-mute); margin-bottom: 32px;
+      display: flex; align-items: center; gap: 16px;
+    }
+    .article-eyebrow span { color: var(--rule); }
+    .article-title {
+      font-family: var(--f-cjk); font-weight: 300;
+      font-size: clamp(40px, 7vw, 88px);
+      line-height: 1.08; letter-spacing: -0.01em;
+      margin-bottom: 24px;
+      /* subtle text-shadow for depth */
+      text-shadow: 0 1px 0 color-mix(in oklab, var(--ink) 8%, transparent);
+    }
+    .article-subtitle {
+      font-family: var(--f-mono); font-size: 12px;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--ink-mute); font-style: normal;
+      border-left: 2px solid var(--accent);
+      padding-left: 14px;
+      margin-top: 8px;
+    }
+
+    /* ── Article body ── */
+    .article-body {
+      display: grid;
+      grid-template-columns: 1fr min(var(--col-text), 100%) 1fr;
+      padding: 80px 0 120px;
+    }
+    .article-body > * { grid-column: 2; }
+
+    /* prose */
+    .prose {
+      font-family: var(--f-cjk); font-weight: 300;
+      font-size: clamp(16.5px, 1.8vw, 19px);
+      line-height: 2;
+      color: var(--ink-soft);
+    }
+    .prose p {
+      margin-bottom: 1.8em;
+    }
+    .prose p:last-child { margin-bottom: 0; }
+
+    /* section breaks */
+    .prose hr {
+      border: none;
+      margin: 3em auto;
+      text-align: center;
+      color: var(--ink-mute);
+      font-family: var(--f-mono);
+      font-size: 12px;
+      letter-spacing: 0.3em;
+    }
+    .prose hr::after { content: "· · ·"; }
+
+    /* drop cap on first paragraph */
+    .prose > p:first-child::first-letter {
+      font-family: var(--f-display);
+      font-size: 3.8em;
+      font-weight: 300;
+      float: left;
+      line-height: 0.82;
+      margin: 0.08em 0.1em 0 0;
+      color: var(--accent);
+    }
+
+    /* pull quote */
+    .pull {
+      grid-column: 1 / 4;
+      padding: 48px var(--gutter);
+      margin: 24px 0;
+      font-family: var(--f-cjk);
+      font-size: clamp(20px, 3vw, 32px);
+      font-weight: 300;
+      line-height: 1.5;
+      letter-spacing: 0.01em;
+      color: var(--ink);
+      border-top: 1px solid var(--rule);
+      border-bottom: 1px solid var(--rule);
+      text-align: center;
+      font-style: italic;
+      position: relative;
+    }
+    .pull::before {
+      content: "";
+      position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+      width: 40px; height: 2px; background: var(--accent); top: -1px;
+    }
+
+    /* ── Footer ── */
+    .article-footer {
+      border-top: 1px solid var(--rule);
+      padding: 40px 0;
+    }
+    .article-footer-inner {
+      display: flex; justify-content: space-between;
+      align-items: center; flex-wrap: wrap; gap: 16px;
+    }
+    .footer-meta {
+      font-family: var(--f-mono); font-size: 11px;
+      letter-spacing: 0.1em; color: var(--ink-mute); text-transform: uppercase;
+    }
+    .back-link {
+      font-family: var(--f-mono); font-size: 11px;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--ink-mute); transition: color 160ms ease;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .back-link:hover { color: var(--accent); }
+
+    /* ── Progress bar ── */
+    .progress-bar {
+      position: fixed; top: 0; left: 0; right: 0; height: 2px;
+      background: var(--rule); z-index: 200;
+    }
+    .progress-fill {
+      height: 100%; background: var(--accent);
+      width: 0%; transition: width 60ms linear;
+    }
+
+    /* ── Reveal ── */
+    .reveal {
+      opacity: 0; transform: translateY(18px);
+      transition: opacity 700ms ease, transform 700ms cubic-bezier(.2,.7,.2,1);
+    }
+    .reveal.in { opacity: 1; transform: none; }
+  </style>
+</head>
+<body>
+
+  <!-- Cursor -->
+  <div class="cursor-ring" id="ring"></div>
+  <div class="cursor-dot" id="dot"></div>
+
+  <!-- Progress -->
+  <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+
+  <!-- Nav -->
+  <nav id="nav">
+    <div class="nav-inner">
+      <a class="brand" href="../index.html">
+        <span class="brand-mark"></span>
+        <span>Yuan Zhao</span>
+        <span class="brand-cn">赵元</span>
+      </a>
+      <div class="nav-right">
+        <a class="nav-back" href="../index.html#writing">← Writing</a>
+        <button class="theme-btn" id="themeBtn">Dark · 深</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Article header -->
+  <header class="article-header">
+    <div class="page">
+      <div class="article-eyebrow reveal">
+        <span>§ Writing · 文章</span>
+        <span>·</span>
+        <span>2026 · 04</span>
+      </div>
+      <h1 class="article-title reveal">那时候你还不知道</h1>
+      <p class="article-subtitle reveal">Scotland field course · Spring 2026</p>
+    </div>
+  </header>
+
+  <!-- Article body -->
+  <main>
+    <article class="article-body page">
+
+      <div class="prose reveal">
+        <p>那时候你还不知道，从曼彻斯特出发的那辆长途巴士，会成为后来你记忆里最难说清楚的一个起点。</p>
+
+        <p>牛津路校门口的风把大家的头发吹乱。背包里塞着睡袋、量角器、一盒彩铅，还有一本还没写过一个字的野外记录本。你比规定时间早到了二十分钟，然后站在那里发呆，看别人陆续拖着行李走来，互相问要不要借充电宝。</p>
+
+        <p>司机发动了车。苏格兰在正北方向，大约九个小时。</p>
+      </div>
+
+      <hr class="pull" style="border:none;margin:3em 0;text-align:center;color:var(--ink-mute);font-family:var(--f-mono);font-size:12px;letter-spacing:0.3em;"><!-- spacer --></hr>
+
+      <div class="prose reveal">
+        <p>窗外的风景是一点一点变的，不是突然的那种。英格兰的平原越来越低，树越来越少，天越来越宽，山越来越黑。过了边境没有任何标志，只是某一刻你抬起头，发现云已经压得快碰到路面了，荒野上什么都没有，只有石楠和偶尔掠过的一只鸟。</p>
+
+        <p>傍晚到Corpach的时候，Linnhe湖边的拖车营地已经亮起灯了。</p>
+
+        <p>你住的是一辆活动房，两个卧室，一个小厨房，一台电视，暖气声嗡嗡作响。窗外是湖，湖对岸是山，山顶有积雪，在暮色里是一片很安静的白。隔壁拖车里有人讨论谁睡双人床，然后传来一阵笑声，然后是冰箱被打开的声音。</p>
+
+        <p>那天晚上你铺好睡袋，躺着盯着拖车的天花板想了一会儿。</p>
+
+        <p>这是真正的野外了。哪怕现在只是一辆活动房，哪怕外面只是拖车营地的停车场。</p>
+      </div>
+
+      <blockquote class="pull reveal">
+        四亿七千万年。那时候连鱼都还没上岸。
+      </blockquote>
+
+      <div class="prose reveal">
+        <p>第一个野外日的早上，Kinlochleven的海岸边，Covey-Crump教授蹲下来，用地质锤轻敲了一下一块灰色的片岩，说："这块石头大概在四亿七千万年前经历了一次造山运动。"</p>
+
+        <p>你低头看了看自己手里的罗盘倾斜仪。</p>
+
+        <p>海岸边是一条条灰绿色的片岩，夹着白色石英脉，被早期的褶皱搓成奇怪的形状——有的地方是穹形，有的地方几乎直立，有的地方你完全看不出它在干什么。这就是Dalradian超群，劳伦大陆裂解时沉积在被动陆缘上的海相泥沙，后来大洋关闭，火山弧撞上来，一切被挤压、变质、折叠，就这么扔在苏格兰西海岸，等了几亿年，等一个二年级的地球科学学生来，试图用罗盘量它的走向和倾角。</p>
+
+        <p>这件事的荒诞性在第三次量错之后达到了顶峰。</p>
+
+        <p>风从Loch Leven湖面刮来，带着碎冰一样的凉意，顺着耳廓一直灌进衣领。你把罗盘放平，转动刻度盘，试图让磁针稳定下来。磁针在晃。风在动，磁针就在动。记录本上已经有了几行划掉重写的数据。教授路过，低头看了一眼，说："没关系，这里的磁偏差大概是东偏一度，记下来就好。"</p>
+
+        <p>东偏一度。</p>
+
+        <p>你把这句话写在记录本的空白处，然后继续弯腰量下一块石头。</p>
+      </div>
+
+      <div class="prose reveal">
+        <p>下午收工往回走的时候，你在一处沼泽里踩了一脚，水漫进鞋帮。一路靴子里都是湿的，每走一步都会发出一声很蠢的咕叽声。防水裤发挥了一半的作用——它保住了裤腿，没保住鞋。</p>
+
+        <p>晚上回到拖车，大家轮流用那个小厨房。有人煮意面，有人开罐头，有人默默吃着从超市买来的三明治。吃完了就要把今天的数据整理到A3图纸上，把所有罗盘数据画成赤平投影图——一个圆，用来判断褶皱的轴面走向和倾伏方向。</p>
+
+        <p>灯光昏黄，桌面上铺满了图纸和铅笔屑。有人用黑色Edding勾线，有人用彩铅填色，有人把量角器压在纸上一格一格地量。外面的风把拖车吹得微微晃动。</p>
+
+        <p>"这个叠理方向不对吧？"</p>
+
+        <p>"你的磁偏差加了吗？"</p>
+
+        <p>"苦了，我把走向和倾向搞反了。"</p>
+
+        <p>"……再量一遍？"</p>
+
+        <p>很晚了，记录本用掉了三页。赤平投影图上的点终于聚集成了一个大致的形状，指向一个大约北北西的褶皱轴。你盯着它看了一会儿，大约明白了这条海岸线底下的结构——那是一个巨大褶皱的一翼，几亿年前被挤压弯曲，后来露出海面，被侵蚀、磨损，最后变成你今天踩过的那片礁石。</p>
+
+        <p>那一刻你没有什么强烈的感受。只是觉得：哦，原来是这样。</p>
+
+        <p>只是。</p>
+      </div>
+
+      <div class="prose reveal">
+        <p>去Glen Coe峡谷的那天，做的是compass-and-pace——用脚步丈量地形，在一张空白的纸上画出区域里所有侵入岩的位置和走向。没有底图，只有一个起点坐标、一个罗盘，和你自己的步伐。</p>
+
+        <p>Glen Coe的山是黑色的。三百多年前有一场屠杀，冬天的夜里，雪地上死了三十八个人。现在峡谷里有滑雪场，有徒步道，停车场里停着越野车，游客站在观景台上拍照。</p>
+
+        <p>你在岩石露头之间走来走去，把罗盘对准安山岩里的辉绿岩岩墙，记下方位角，数步数，在白纸上点下位置，然后继续走。同行的搭档负责记录，你负责走路。没有人说太多话，只是走，量，记，再走，再量，再记。</p>
+
+        <p>脑子里只剩下罗盘读数和步数。</p>
+
+        <p>那是那两个星期里你最接近某种安静的时刻——不是顿悟，不是感动，只是某种空白，很干净。</p>
+      </div>
+
+      <blockquote class="pull reveal">
+        "你看到了。"<br>
+        <span style="font-size:0.7em;opacity:0.7;font-style:normal;letter-spacing:0.05em;">不是看见答案，是真的看见那块石头。</span>
+      </blockquote>
+
+      <div class="prose reveal">
+        <p>下午在Kentallen，看Ballachulish岩浆侵入体的接触变质带。教授拿起一块暗色岩石，说："这里原来是泥质岩，被岩浆烤成了砂线石角岩，温度大概超过了五百度。"</p>
+
+        <p>五百度。原来石头也可以被烤熟。</p>
+
+        <p>海湾很平静，水面反着灰色的天光。你蹲下来，用手摸了摸那块角岩的表面——细密，坚硬，带着微微的凉意，像是从很深的地方刚被挖出来。几亿年前，岩浆在这里侵入，把周围几公里的岩石全部改造了一遍，然后冷却，然后被剥蚀，然后你来了，拿着地质锤和放大镜，看它的残骸。</p>
+
+        <p>你把放大镜收起来，没有说什么。</p>
+      </div>
+
+      <div class="prose reveal">
+        <p>第二周转到Dundee，换成了酒店，有早餐，有热水，被子是真正的被子。</p>
+
+        <p>第一天晚上你把Fort William的地图交上去，然后坐在酒店床上发了很长时间的呆。窗外是Dundee的街道，有超市，有炸鱼薯条，有走来走去的人。和峡谷里的风声比起来，一切都显得太近了，又太陌生了。</p>
+
+        <p>像是从一个地方回来了，但还没到另一个地方。</p>
+      </div>
+
+      <div class="prose reveal">
+        <p>Crawton的海岸，泥盆纪早期的玄武岩露头。海浪把礁石打得乌黑发亮，带来一股咸腥的气息，还有一点说不清楚的、石头被海水长期浸泡过的铁锈味。熔岩流里有气孔，越靠近顶部越密集，越靠近底部越小。你蹲下来看了很久，然后把观察写进记录本，在旁边加了一句解释。</p>
+
+        <p>教授站在你旁边，低头看了一眼，说："对，你看到了。"</p>
+
+        <p>就这一句话。不是"做得很好"，不是"答案正确"，只是"你看到了"。但那一刻你忽然明白了一件事——他说的"看到"不是看见答案，是真的看见那块石头。不是背来的，不是猜的，是从那个气孔的大小和分布里，一点点读出来的。</p>
+
+        <p>那是那两个星期里你最接近某种满足感的时刻。</p>
+      </div>
+
+      <div class="prose reveal">
+        <p>St Andrews的Rock and Spindle，一个石炭纪的火山颈，在海滩上突兀地竖着。柱状节理呈放射状排列，围着中心的火山颈，像一朵石头的花。那是冷却收缩的结果，从外向内，一层层地裂开，然后被几百万年的海浪磨成了现在这个样子。</p>
+
+        <p>你坐在附近的礁石上画素描。海风一直吹，画纸要用手压住，不然就被刮跑。铅笔在纸上发出很轻的沙沙声，几乎被风盖住。</p>
+
+        <p>手册里写的是：石炭纪时，苏格兰还在赤道以南约十度。浅海，珊瑚礁，温暖的热带气候。</p>
+
+        <p>现在是苏格兰的春天，北风凛冽，你穿着三层衣服还是冷。三亿年前是热带，现在是海边的冷风——同一块地方，同一块岩石。你想把这句话写进记录本，但拿起笔又放下了。</p>
+
+        <p>有些东西写出来反而没意思了。</p>
+      </div>
+
+      <div class="prose reveal">
+        <p>最后一个野外日，St Monans。石灰岩和砂岩交替叠置的海岸线，潮水早上退去，下午再涨回来。你做完compass-and-pace图，回答了记录本上最后几道解释题，把笔帽盖上，坐在礁石上等大家集合。</p>
+
+        <p>浪涌上来，又退去。</p>
+
+        <p>石头还是那块石头。</p>
+
+        <p>没有人说什么。</p>
+      </div>
+
+      <div class="prose reveal">
+        <p>回程的早上，作业交上去之后，你坐上了回曼彻斯特的大巴。</p>
+
+        <p>过了边境，苏格兰的山变成了英格兰的丘，铅灰色的天空变成了浅灰色，窗外开始出现加油站和连锁咖啡店。你把野外记录本从背包里取出来，翻了翻。被雨水晕染过的铅笔线条，改过三次的走向数据，最后那页上草草写着"Rock and Spindle，柱状节理，放射状，接触清晰"。</p>
+
+        <p>记录本已经用掉了大半本。</p>
+
+        <p>那些折叠在Kinlochleven海边的石头还在那里，还会一直在那里——再过几亿年也还在那里，等下一个拿着罗盘来量倾角的人。它们不在乎。四亿七千万年面前，两个星期是什么，一生是什么，一所大学是什么。</p>
+
+        <p>只是——</p>
+
+        <p>你去了。你在那里。你量了那块石头，它确确实实地给出了一个读数。</p>
+
+        <p>那时候你还不知道，这两个星期，会成为你后来说起地球科学时总会先想起的那段时光。不是因为做了什么了不起的事，不是因为哪张地图画得漂亮。</p>
+
+        <p>只是因为某个下午，在苏格兰的西海岸，靴子里是湿的，风把记录本的纸页吹乱，你蹲在一块四亿七千万岁的石头旁边，试图读懂它折叠的方式。</p>
+
+        <p>然后大约读懂了一点点。</p>
+
+        <p>那就够了。</p>
+      </div>
+
+    </article>
+  </main>
+
+  <!-- Footer -->
+  <footer class="article-footer">
+    <div class="page">
+      <div class="article-footer-inner">
+        <div class="footer-meta">© 2026 Yuan Zhao · 赵元</div>
+        <a class="back-link" href="../index.html#writing">← Back to Writing</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    /* Cursor */
+    const dot  = document.getElementById("dot");
+    const ring = document.getElementById("ring");
+    let dotX = 0, dotY = 0, ringX = 0, ringY = 0, mx = 0, my = 0;
+    window.addEventListener("mousemove", e => { mx = e.clientX; my = e.clientY; });
+    window.addEventListener("mouseover", e => {
+      const t = e.target.closest("a, button, blockquote");
+      ring.classList.toggle("active", !!t);
+    });
+    (function tick() {
+      dotX  += (mx - dotX)  * 0.6;
+      dotY  += (my - dotY)  * 0.6;
+      ringX += (mx - ringX) * 0.18;
+      ringY += (my - ringY) * 0.18;
+      dot.style.transform  = `translate(${dotX}px,${dotY}px) translate(-50%,-50%)`;
+      ring.style.transform = `translate(${ringX}px,${ringY}px) translate(-50%,-50%)`;
+      requestAnimationFrame(tick);
+    })();
+
+    /* Nav scroll */
+    const nav = document.getElementById("nav");
+    window.addEventListener("scroll", () => {
+      nav.classList.toggle("scrolled", window.scrollY > 24);
+    });
+
+    /* Reading progress */
+    const fill = document.getElementById("progress");
+    window.addEventListener("scroll", () => {
+      const h = document.documentElement;
+      const pct = h.scrollTop / (h.scrollHeight - h.clientHeight) * 100;
+      fill.style.width = pct + "%";
+    });
+
+    /* Reveal on scroll */
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } });
+    }, { threshold: 0.08 });
+    document.querySelectorAll(".reveal").forEach(el => io.observe(el));
+
+    /* Theme toggle */
+    const btn = document.getElementById("themeBtn");
+    const html = document.documentElement;
+    btn.addEventListener("click", () => {
+      const dark = html.dataset.theme === "dark";
+      html.dataset.theme = dark ? "light" : "dark";
+      btn.textContent = dark ? "Dark · 深" : "Light · 浅";
+    });
+  </script>
+</body>
+</html>
