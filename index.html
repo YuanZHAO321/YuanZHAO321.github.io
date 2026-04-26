@@ -1,97 +1,26 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Yuan ZHAO - Personal Homepage</title>
-  <link rel="stylesheet" href="stylesheets/full-stylesheet.css">
-  <link rel="stylesheet" href="stylesheets/styleguide.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Yuan Zhao · 赵元 — Earth Sciences</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,400&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500&family=Noto+Serif+SC:wght@300;400;500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="styles.css" />
 </head>
-<body class="campl-theme-2">
+<body>
+  <div id="root"></div>
 
-<header class="campl-global-header campl-row">
-  <div class="campl-wrap clearfix">
-    <div class="campl-header-container campl-column8">
-      <a href="#" class="campl-main-logo">
-        <img alt="Logo" src="images/Yuan, ZHAO.jpg" height="38">
-      </a>
-      <nav>
-        <ul class="campl-unstyled-list campl-horizontal-navigation campl-global-navigation" id="primary-nav">
-          <li><a href="#about">About Me</a></li>
-          <li><a href="#projects">Projects</a></li>
-          <li><a href="#skills">Skills</a></li>
-          <li><a href="#contact">Contact</a></li>
-        </ul>
-      </nav>
-    </div>
-  </div>
-</header>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 
-<main id="content">
-  <section class="campl-row campl-page-header">
-    <div class="campl-wrap clearfix">
-      <div class="campl-column12 campl-center">
-        <h1>Hello, I'm <strong>Yuan ZHAO</strong></h1>
-        <p>Welcome to my personal homepage. Explore my work and experiences below!</p>
-      </div>
-    </div>
-  </section>
-
-  <section id="about" class="campl-row campl-content campl-top-padding">
-    <div class="campl-wrap clearfix">
-      <div class="campl-column8">
-        <h2>About Me</h2>
-        <p>I am a student majoring in BSc Earth Science at University of Manchester, specializing in Energy and Resources, and passionate about natural and coding.</p>
-      </div>
-    </div>
-  </section>
-
-  <section id="projects" class="campl-row campl-content campl-top-padding">
-    <div class="campl-wrap clearfix">
-      <div class="campl-column8">
-        <h2>Projects</h2>
-        <ul class="campl-unstyled-list">
-          <li><strong>Project One</strong>: R Project.</li>
-          <li><strong>Project Two</strong>: Mam Tor Report.</li>
-          <li><strong>Project Three</strong>: Python Project & Report.</li>
-        </ul>
-      </div>
-    </div>
-  </section>
-
-  <section id="skills" class="campl-row campl-content campl-top-padding">
-    <div class="campl-wrap clearfix">
-      <div class="campl-column8">
-        <h2>Skills</h2>
-        <p>HTML / CSS / JavaScript / Python / R / Data Analysis / Machine Learning / Maths / Physics / Chemistry / ArcGIS / Mapping / Remote Sensing / Microscopy / Fieldwork</p>
-      </div>
-    </div>
-  </section>
-
-  <section id="contact" class="campl-row campl-content campl-top-padding campl-bottom-padding">
-    <div class="campl-wrap clearfix">
-      <div class="campl-column8">
-        <h2>Contact Me</h2>
-        <p>Email: <a href="mailto:zhaoyuan.zy@outlook.com">zhaoyuan.zy@outlook.com</a></p>
-        <p>GitHub: <a href="https://github.com/YuanZHAO321" target="_blank">github.com/YuanZHAO321</a></p>
-        <p>LinkedIn: </p>
-        <!-- <a href="https://linkedin.com/in/" target="_blank"></a> -->
-      </div>
-    </div>
-  </section>
-</main>
-
-<footer class="campl-global-footer campl-row">
-  <div class="campl-wrap clearfix">
-    <div class="campl-column12 campl-center">
-      <p>© 2025 Yuan ZHAO. All rights reserved.</p>
-    </div>
-  </div>
-</footer>
-
-<script src="javascripts/libs/jquery-min.js"></script>
-<script src="javascripts/libs/modernizr.js"></script>
-<script src="javascripts/custom.js"></script> 
+  <script type="text/babel" src="tweaks-panel.jsx"></script>
+  <script type="text/babel" src="data.jsx"></script>
+  <script type="text/babel" src="components.jsx"></script>
+  <script type="text/babel" src="app.jsx"></script>
 </body>
 </html>
