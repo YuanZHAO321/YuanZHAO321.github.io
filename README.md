@@ -109,4 +109,4 @@ Both are updated by pushing to this repository (GitHub Pages) or syncing files t
 
 ---
 
-*Built in Manchester.*
+*Built in Manchester, with Claude.*
