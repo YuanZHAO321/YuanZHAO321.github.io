@@ -91,4 +91,4 @@ LINKS        // 联系方式
 
 ---
 
-*Built in Manchester.*
+*Built in Manchester, with Claude.*
