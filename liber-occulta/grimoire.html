@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>神秘学法术书 · LIBER OCCVLTÆ SAPIENTIÆ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&family=Cardo:ital,wght@0,400;0,700;1,400&family=Noto+Serif+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --paper-0: #efe6d0;          /* 主羊皮纸 */
+    --paper-1: #e6dcc0;          /* 较深羊皮 */
+    --paper-2: #f5ecd6;          /* 较浅 */
+    --paper-shadow: #c9b88a;
+    --ink: #1d150c;              /* 主墨色 */
+    --ink-soft: #3a2a17;
+    --ink-faded: #6c5836;
+    --ink-very-faded: #9c8a64;
+    --rubric: #8a1c1c;            /* 朱砂红 — 用于章节首字、强调 */
+    --rubric-deep: #6a1414;
+    --azure: #1d3a7a;             /* 古典蓝 — 次级强调 */
+    --gold: #8c6d1f;              /* 旧金 */
+    --gold-bright: #b78c2a;
+    --rule: #b8a674;
+    --rule-soft: #cdbd91;
+
+    --serif-display: "Cormorant Garamond", "Cardo", "Noto Serif SC", serif;
+    --serif: "EB Garamond", "Cardo", "Noto Serif SC", "Songti SC", serif;
+    --serif-old: "IM Fell English", "Cardo", "EB Garamond", serif;
+    --sc: "IM Fell English SC", "EB Garamond", serif;
+    --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  html { background: #2a241a; }
+  body {
+    font-family: var(--serif);
+    color: var(--ink);
+    background:
+      radial-gradient(ellipse 60% 40% at 50% 30%, rgba(255,245,220,0.7), transparent 70%),
+      radial-gradient(ellipse 80% 60% at 50% 100%, rgba(140,109,31,0.18), transparent 60%),
+      var(--paper-0);
+    min-height: 100vh;
+    font-size: 17px;
+    line-height: 1.62;
+  }
+  /* 羊皮纸纤维 */
+  body::before {
+    content: "";
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='280' height='280'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.5' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.36 0 0 0 0 0.28 0 0 0 0 0.14 0 0 0 0.5 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    opacity: 0.18; mix-blend-mode: multiply;
+  }
+  /* 边角斑渍 */
+  body::after {
+    content: "";
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background:
+      radial-gradient(ellipse 30% 20% at 0% 100%, rgba(110,80,30,0.18), transparent 70%),
+      radial-gradient(ellipse 25% 15% at 100% 0%, rgba(120,70,30,0.16), transparent 70%),
+      radial-gradient(ellipse 18% 12% at 12% 6%, rgba(80,50,20,0.14), transparent 70%);
+    mix-blend-mode: multiply;
+  }
+
+  ::selection { background: rgba(138, 28, 28, 0.25); }
+  ::-webkit-scrollbar { width: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--rule-soft); border-radius: 0; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--rule); }
+
+  #root { position: relative; z-index: 1; }
+
+  .hebrew { font-family: "Cardo", "Noto Serif SC", serif; font-weight: 400; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script>
+  window.addEventListener('error', function(e) {
+    const r = document.getElementById('root');
+    if (r && !r.innerHTML) {
+      r.innerHTML = '<pre style="color:#8a1c1c;padding:20px;font:12px monospace;white-space:pre-wrap">' + e.message + '\n@ ' + (e.filename||'?') + ':' + (e.lineno||0) + '</pre>';
+    }
+  });
+</script>
+
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="grimoire-data.jsx"></script>
+<script type="text/babel" src="grimoire-data2.jsx"></script>
+<script type="text/babel" src="grimoire-sigils.jsx"></script>
+<script type="text/babel" src="liber-ornaments.jsx"></script>
+<script type="text/babel" src="liber-tools.jsx"></script>
+<script type="text/babel" src="liber-pages.jsx"></script>
+<script type="text/babel" src="liber-app.jsx"></script>
+
+<script>
+window.__TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "fontSize": 17,
+  "showLatin": true,
+  "showHebrew": true,
+  "paper": "vellum"
+}/*EDITMODE-END*/;
+</script>
+</body>
+</html>
