@@ -382,19 +382,27 @@ function walk(node, depth, fn){
 
 function fitMap(){ if(mm) mm.fit(); }
 
+// 取 markmap 内部持有的（已初始化、带 state 的）数据树
+function getData(){ return (mm && mm.state && mm.state.data) ? mm.state.data : rootData; }
+
+// 直接改 fold 后重绘；renderData 不会像 setData 那样重新套用 initialExpandLevel
+function rerender(){
+  if(!mm) return;
+  const r = mm.renderData ? mm.renderData() : mm.setData(getData());
+  Promise.resolve(r).then(() => mm.fit()).catch(() => mm.fit());
+}
+
 function expandAll(){
-  if(!mm || !rootData) return;
-  walk(rootData, 0, (n) => { n.payload = n.payload || {}; n.payload.fold = 0; });
-  mm.setData(rootData);
-  mm.fit();
+  if(!mm) return;
+  walk(getData(), 0, (n) => { n.payload = n.payload || {}; n.payload.fold = 0; });
+  rerender();
 }
 
 function collapseAll(){
-  if(!mm || !rootData) return;
+  if(!mm) return;
   // 折叠所有一级分支，仅保留主干（根 + 11 个分支）
-  walk(rootData, 0, (n, d) => { n.payload = n.payload || {}; n.payload.fold = d >= 1 ? 1 : 0; });
-  mm.setData(rootData);
-  mm.fit();
+  walk(getData(), 0, (n, d) => { n.payload = n.payload || {}; n.payload.fold = d >= 1 ? 1 : 0; });
+  rerender();
 }
 
 // —— 轻量内联 Markdown → HTML —— //
