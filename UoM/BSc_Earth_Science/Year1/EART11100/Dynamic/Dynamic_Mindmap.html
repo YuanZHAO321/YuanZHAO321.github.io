@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EART11100 动态地球 · 详细思维导图</title>
+<style>
+  :root{
+    --paper:#f3eee3;--paper2:#ece4d4;--ink:#2b2a26;--ink-soft:#6b675e;--line:#cdc3ad;
+    --foundation:#5d6e54;--rock:#b25129;--hydro:#1f6f80;
+    --rock-soft:#f0ddd0;--hydro-soft:#d6e8ea;--foundation-soft:#dfe5d6;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 18% 12%, rgba(178,81,41,.06), transparent 40%),
+      radial-gradient(circle at 85% 80%, rgba(31,111,128,.07), transparent 45%),
+      var(--paper);
+    color:var(--ink);
+    font-family:-apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;
+    line-height:1.5;min-height:100vh;padding:0 0 80px;
+  }
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.5;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  }
+  header{position:relative;z-index:1;padding:38px 48px 22px;border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg, rgba(255,255,255,.35), transparent);}
+  .kicker{font-family:Georgia,"Times New Roman",serif;font-style:italic;letter-spacing:.04em;color:var(--ink-soft);font-size:14px;}
+  h1{font-family:Georgia,"Songti SC","Times New Roman",serif;font-weight:700;letter-spacing:.01em;
+    font-size:clamp(26px,4vw,40px);margin:.15em 0 .1em;line-height:1.12;}
+  h1 .en{display:block;font-size:.5em;font-weight:400;color:var(--ink-soft);letter-spacing:.06em;margin-top:.35em;font-style:italic;}
+  .sub{color:var(--ink-soft);font-size:14.5px;max-width:780px;margin-top:10px;}
+
+  .controls{position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:18px 48px 6px;}
+  .btn{font-family:inherit;font-size:13px;letter-spacing:.02em;cursor:pointer;border:1px solid var(--line);
+    background:rgba(255,255,255,.5);color:var(--ink);padding:7px 14px;border-radius:999px;transition:all .18s ease;}
+  .btn:hover{background:var(--ink);color:var(--paper);border-color:var(--ink);transform:translateY(-1px);}
+  .legend{display:flex;gap:16px;align-items:center;margin-left:auto;font-size:12.5px;color:var(--ink-soft);flex-wrap:wrap;}
+  .legend span{display:inline-flex;align-items:center;gap:6px;}
+  .dot{width:11px;height:11px;border-radius:50%;display:inline-block;}
+  .d-f{background:var(--foundation);}.d-r{background:var(--rock);}.d-h{background:var(--hydro);}
+
+  .map-wrap{position:relative;z-index:1;padding:26px 40px 0;overflow-x:auto;}
+  .tree, .tree ul{list-style:none;margin:0;padding:0;}
+  .tree{font-size:15px;}
+  .tree ul{margin-left:26px;border-left:1.5px solid var(--line);padding-left:0;}
+  li{position:relative;}
+  .tree ul > li::before{content:"";position:absolute;left:-0.1px;top:1.05em;width:18px;height:1.5px;background:var(--line);}
+
+  .node{display:inline-flex;align-items:baseline;gap:9px;margin:3px 0 3px 22px;padding:7px 14px 7px 12px;
+    border-radius:11px;cursor:default;position:relative;border:1px solid transparent;
+    transition:background .15s ease,border-color .15s ease,transform .15s ease;max-width:min(660px,84vw);}
+  .node.has-children{cursor:pointer;}
+  .node.has-children:hover{background:rgba(255,255,255,.55);border-color:var(--line);transform:translateX(2px);}
+  .tw{font-weight:500;}
+  .te{font-size:.78em;color:var(--ink-soft);font-family:Georgia,serif;font-style:italic;letter-spacing:.02em;}
+  .toggle{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;
+    flex:0 0 18px;font-size:12px;font-weight:700;line-height:1;color:#fff;align-self:center;font-family:Georgia,serif;}
+  .leaf-mark{width:7px;height:7px;border-radius:50%;flex:0 0 7px;align-self:center;margin-left:5px;}
+
+  li.collapsed > ul{display:none;}
+  .node .toggle::after{content:"–";}
+  li.collapsed > .node .toggle::after{content:"+";}
+
+  .root > .node{background:linear-gradient(135deg,var(--ink),#454239);color:var(--paper);margin-left:0;
+    padding:13px 22px;border-radius:14px;box-shadow:0 8px 24px rgba(43,42,38,.22);}
+  .root > .node .tw{font-size:1.25em;font-family:Georgia,"Songti SC",serif;letter-spacing:.02em;}
+  .root > .node .te{color:rgba(243,238,227,.7);}
+  .root > .node .toggle{background:rgba(243,238,227,.25);}
+
+  .g-foundation > .node{border-left:4px solid var(--foundation);}
+  .g-rock > .node{border-left:4px solid var(--rock);}
+  .g-hydro > .node{border-left:4px solid var(--hydro);}
+  .g-foundation .toggle{background:var(--foundation);}
+  .g-rock .toggle{background:var(--rock);}
+  .g-hydro .toggle{background:var(--hydro);}
+  .g-foundation .leaf-mark{background:var(--foundation);}
+  .g-rock .leaf-mark{background:var(--rock);}
+  .g-hydro .leaf-mark{background:var(--hydro);}
+
+  .lvl1 > .node{font-size:1.06em;}
+  .lvl1 > .node .tw{font-weight:700;font-family:Georgia,"Songti SC",serif;}
+  .g-foundation.lvl1 > .node{background:var(--foundation-soft);}
+  .g-rock.lvl1 > .node{background:var(--rock-soft);}
+  .g-hydro.lvl1 > .node{background:var(--hydro-soft);}
+  .lvl2 > .node .tw{font-weight:600;}
+  .lvl3 > .node .tw{font-weight:600;}
+  .lvl3 > .node{background:rgba(255,255,255,.32);}
+
+  .week-badge{font-family:Georgia,serif;font-size:.72em;font-weight:700;color:#fff;padding:1px 7px;border-radius:6px;
+    margin-right:2px;align-self:center;letter-spacing:.03em;}
+  .g-foundation .week-badge{background:var(--foundation);}
+  .g-rock .week-badge{background:var(--rock);}
+  .g-hydro .week-badge{background:var(--hydro);}
+
+  .root{animation:fade .5s ease both;}
+  @keyframes fade{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+
+  footer{position:relative;z-index:1;padding:26px 48px;color:var(--ink-soft);font-size:12.5px;border-top:1px solid var(--line);margin-top:34px;}
+  @media(max-width:640px){
+    header{padding:26px 20px 16px;}.controls,.map-wrap,footer{padding-left:16px;padding-right:16px;}
+    .tree ul{margin-left:16px;}.node{margin-left:16px;}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="kicker">EART11100 · Understanding the Earth</div>
+  <h1>动态地球 · 详细思维导图<span class="en">A Dynamic Planet — Detailed Mind Map</span></h1>
+  <p class="sub">四层结构：<b>主线 → 周 → 核心概念 → 具体细节</b>（机制 · 数字 · 实例 · 考点）。<b style="color:var(--rock)">岩石循环</b>(Rhodri) 与 <b style="color:var(--hydro)">水文循环</b>(David) 配色区分。点击带 <b>+</b> 的节点逐层展开。</p>
+</header>
+
+<div class="controls">
+  <button class="btn" id="expandAll">全部展开</button>
+  <button class="btn" id="toConcept">展开到概念</button>
+  <button class="btn" id="toWeek">收起到周</button>
+  <div class="legend">
+    <span><i class="dot d-f"></i>导论</span>
+    <span><i class="dot d-r"></i>岩石循环 (Rhodri)</span>
+    <span><i class="dot d-h"></i>水文循环 (David)</span>
+  </div>
+</div>
+
+<div class="map-wrap"><ul class="tree" id="tree"></ul></div>
+<footer>整理自 11 周讲义 + 课堂转录 · 四层细化版 · 关键术语中英对照，便于对照英文考试。</footer>
+
+<script>
+const DATA = {
+  t:"动态地球", e:"A Dynamic Planet", root:true,
+  c:[
+    /* ===================== 导论 ===================== */
+    { g:"foundation", t:"导论与框架", e:"Foundations", c:[
+      { week:"W1", t:"地球系统与课程内容", c:[
+        {t:"五大圈层", e:"five spheres", c:[
+          {t:"大气圈 Atmosphere", e:"气体"},
+          {t:"冰冻圈 Cryosphere", e:"固态水"},
+          {t:"水圈 Hydrosphere", e:"液态水"},
+          {t:"生物圈 Biosphere", e:"全部生命"},
+          {t:"地圈 Geosphere", e:"岩石圈→软流圈→地幔→外/内核"},
+        ]},
+        {t:"两大循环", c:[
+          {t:"岩石循环", e:"地球内热驱动 · Rhodri"},
+          {t:"水文循环", e:"太阳能驱动 · David"},
+          {t:"二者交叠", e:"火山气体→气候反馈"},
+        ]},
+        {t:"地球化学循环", c:[
+          {t:"驱动 = 能量(热)分布不均"},
+          {t:"不均来源", e:"自转(昼夜)/公转·倾角(气候带·季节)/内部冷板片"},
+          {t:"链条", e:"温压梯度→物质移动→不稳定→相变"},
+        ]},
+        {t:"固体地球结构", c:[
+          {t:"化学模型", e:"地壳/地幔/核 · 局限"},
+          {t:"力学模型 ✓", e:"岩石圈(脆,30-70km)/软流圈(韧)"},
+          {t:"密度", e:"陆壳2.8 / 洋壳3.0 / 橄榄岩>3.3"},
+        ]},
+        {t:"威尔逊旋回", e:"现今实例", c:[
+          {t:"稳定克拉通", e:"西伯利亚"},
+          {t:"裂谷开始", e:"东非"},
+          {t:"首块洋壳", e:"红海"},
+          {t:"成熟大洋(张/缩)", e:"南大西洋 / 南太平洋"},
+          {t:"闭合·碰撞造山", e:"地中海 / 喜马拉雅"},
+        ]},
+      ]},
+    ]},
+
+    /* ===================== 岩石循环 ===================== */
+    { g:"rock", t:"岩石循环 / 地圈", e:"Rock Cycle — Rhodri", c:[
+      { week:"W3", t:"火成过程与火山", c:[
+        {t:"熔融三机制", c:[
+          {t:"加热(地幔柱/热点)", e:"深~100km · 夏威夷·黄石"},
+          {t:"减压(最常见)", e:"浅~10km · 洋脊(18km³/yr)·东非"},
+          {t:"加水", e:"俯冲带 · 安第斯·日本弧"},
+          {t:"造山带增厚熔融", e:"→侵入体,几乎不喷发"},
+        ]},
+        {t:"熔融条件", c:[
+          {t:"固相线 solidus 随压力升高"},
+          {t:"地温曲线 geotherm"},
+          {t:"两线相交才熔融", e:"常态不相交"},
+        ]},
+        {t:"部分熔融→两类熔体", c:[
+          {t:"低熔点矿物先熔·上升离开"},
+          {t:"残余 residue 留下 → 分异"},
+          {t:"地幔→玄武质(基性)"},
+          {t:"下地壳→花岗质(长英质)"},
+        ]},
+        {t:"黏度", c:[
+          {t:"温度↑ → 黏度↓"},
+          {t:"SiO₂↑ · H₂O↓ → 黏度↑"},
+          {t:"基性10-100 / 酸性10⁵-10⁶ Pa·s"},
+          {t:"爆炸性", e:"高SiO₂+高H₂O+高速率→碎裂"},
+        ]},
+        {t:"四种火山", c:[
+          {t:"盾形 shield", e:"基性·熔岩流·夏威夷(最大)"},
+          {t:"成层 stratovolcano", e:"中酸性·熔岩+碎屑·富士"},
+          {t:"熔岩穹丘 dome", e:"极黏"},
+          {t:"火山渣锥 cinder cone", e:"小·侧翼"},
+          {t:"喷发产物", e:"绳状/渣块熔岩·降落/碎屑流·海底枕状"},
+        ]},
+      ]},
+      { week:"W5", t:"地壳垂直运动", c:[
+        {t:"三种断层", c:[
+          {t:"正断层 normal", e:"σ₁垂直·拉张 → 减薄·下降盘"},
+          {t:"逆/冲断层 reverse/thrust", e:"水平挤压 → 增厚·上冲"},
+          {t:"走滑 strike-slip", e:"剪切 → 厚度不变"},
+        ]},
+        {t:"褶皱", c:[
+          {t:"挤压屈曲 → 缩短"},
+          {t:"看紧闭度(翼间角)而非规模"},
+          {t:"等斜褶皱 > 开阔大褶皱(受压)"},
+        ]},
+        {t:"三种机制", c:[
+          {t:"均衡 isostasy", e:"Airy(厚度) / Pratt(密度)"},
+          {t:"挠曲负荷", e:">100km载荷影响邻区"},
+          {t:"动力学效应", e:"地幔上涌/下沉"},
+        ]},
+        {t:"反直觉现象", c:[
+          {t:"裂谷侧翼抬升"},
+          {t:"弧后盆地", e:"俯冲角变陡·回拉"},
+          {t:"前陆盆地", e:"造山带两侧挠曲下沉"},
+        ]},
+        {t:"拉张演化", c:[
+          {t:"被动裂谷(盆岭) vs 主动裂谷(东非)"},
+          {t:"夭折裂谷", e:"北海"},
+          {t:"冰后回弹", e:"苏格兰升/英格兰沉"},
+        ]},
+      ]},
+      { week:"W7", t:"侵蚀地貌", c:[
+        {t:"风化控制", c:[
+          {t:"气候", e:"降雨+高温 → 热带最强"},
+          {t:"坡度", e:"控制风化层移除速率"},
+          {t:"风化限制坡 vs 搬运限制坡"},
+        ]},
+        {t:"风化类型", c:[
+          {t:"物理", e:"冻融楔裂·剥离·根劈"},
+          {t:"化学", e:"水介导·弱碳酸溶解"},
+        ]},
+        {t:"块体运动", c:[
+          {t:"崩落 fall", e:"硬岩·陡"},
+          {t:"滑动 slide", e:"内部不变形"},
+          {t:"滑塌 slump", e:"内部变形 · Mam Tor"},
+          {t:"碎屑流 debris flow", e:"水饱和·像流体·坡度可<1°"},
+        ]},
+        {t:"河流", c:[
+          {t:"搬运", e:"底载/悬移/溶解"},
+          {t:"河谷", e:"软岩V形 / 硬岩峡谷"},
+          {t:"演化", e:"幼(下切)→中(曲流洪泛)→老(准平原)"},
+        ]},
+        {t:"冰川地貌", c:[
+          {t:"塑性流动·搬运力巨大"},
+          {t:"U形谷", e:"不称河"},
+          {t:"悬谷", e:"瀑布·优胜美地"},
+          {t:"冰斗 + 冰斗湖 tarn"},
+          {t:"刃脊 arête / 角峰 horn", e:"马特洪"},
+        ]},
+      ]},
+      { week:"W9", t:"沉积环境", c:[
+        {t:"长期保存", c:[
+          {t:"容纳空间 accommodation", e:"沉降产生"},
+          {t:"沉积盆地", e:"深海洋底不算"},
+          {t:"动态平衡", e:"供给 vs 空间"},
+        ]},
+        {t:"河流(陆相)", c:[
+          {t:"河道·天然堤·洪泛平原"},
+          {t:"决口扇 crevasse splay"},
+          {t:"点坝·曲流迁移", e:"外岸蚀·内岸积"},
+        ]},
+        {t:"浅海三营力", c:[
+          {t:"河流 → 凸出三角洲·河口坝"},
+          {t:"波浪 → 平直海岸·沿岸流·沙嘴潟湖"},
+          {t:"潮汐 → 喇叭形河口湾"},
+        ]},
+        {t:"深水", c:[
+          {t:"大陆架 / 坡 / 洋底"},
+          {t:"重力流", e:"密度大·浊流>100km/h·断电缆"},
+          {t:"海底扇", e:"最大沉积体"},
+        ]},
+        {t:"非碎屑沉积", c:[
+          {t:"有机泥/黑色页岩", e:"高生产力+缺氧·启莫里黏土"},
+          {t:"碳酸盐", e:"浅暖清·镶边陆架/环礁/缓坡"},
+          {t:"蒸发岩", e:"蒸发>补给·古气候指标"},
+        ]},
+      ]},
+      { week:"W10", t:"成岩与变质", c:[
+        {t:"成岩作用", c:[
+          {t:"压实", e:"重排/破裂/压溶"},
+          {t:"胶结 cementation", e:"降孔隙度"},
+          {t:"溶解 · 重结晶"},
+          {t:"矿物替换", e:"白云石化·+11%孔隙"},
+          {t:"源岩成熟", e:"油/气窗"},
+        ]},
+        {t:"变质=两过程", c:[
+          {t:"重结晶", e:"砂岩→石英岩·无新矿物"},
+          {t:"新矿化", e:"页岩→片岩·生成新矿物"},
+          {t:"封闭系统·不退变"},
+        ]},
+        {t:"温度 vs 压力", c:[
+          {t:"温度随构造背景变", e:"俯冲3-5 → 火山>100°C/km"},
+          {t:"压力≈只随深度", e:"3.5kbar/km"},
+          {t:"偏应力", e:"不致变质·塑造劈理/片理/线理"},
+        ]},
+        {t:"三类变质", c:[
+          {t:"区域 regional", e:"T+P·挤压·板岩→片岩→片麻岩"},
+          {t:"接触 contact", e:"仅T·角岩 hornfels"},
+          {t:"动力 dynamic", e:"仅P·糜棱岩/碎裂岩·陨石(柯石英)"},
+        ]},
+        {t:"P-T 路径 & 指示矿物", c:[
+          {t:"岩石导热差·P增快于T·弧形路径"},
+          {t:"组合记录峰值 T(非P)"},
+          {t:"有用原岩", e:"泥岩 / 玄武岩"},
+        ]},
+      ]},
+    ]},
+
+    /* ===================== 水文循环 ===================== */
+    { g:"hydro", t:"水文循环 / 大气·水·冰", e:"Hydrological Cycle — David", c:[
+      { week:"W2", t:"大气如何运作", c:[
+        {t:"能量平衡", c:[
+          {t:"短波入 = 长波出"},
+          {t:"温室效应 +33°C", e:"水汽/CO₂/甲烷"},
+          {t:"无大气-18°C / 有+15°C"},
+        ]},
+        {t:"三大控制", c:[
+          {t:"入射太阳辐射"},
+          {t:"反照率 albedo", e:"冰·云高反射"},
+          {t:"温室气体浓度"},
+        ]},
+        {t:"三圈环流", c:[
+          {t:"ITCZ", e:"辐合上升·暴雨"},
+          {t:"副热带高压", e:"下沉·全球沙漠带"},
+          {t:"极锋", e:"上方有急流"},
+        ]},
+        {t:"急流", c:[
+          {t:"暖冷空气边界", e:"最大温度梯度"},
+          {t:"西风·冬季更强"},
+          {t:"罗斯贝波", e:"脊/槽"},
+        ]},
+        {t:"湿度与绝热", c:[
+          {t:"露点 Td · 相对湿度 RH"},
+          {t:"克劳修斯-克拉佩龙", e:"饱和水汽压"},
+          {t:"DALR 10 / MALR ~5 °C/km"},
+          {t:"雨影", e:"背风侧又暖又干"},
+        ]},
+      ]},
+      { week:"W4", t:"天气与天气预报", c:[
+        {t:"Bjerknes 两要素", c:[
+          {t:"初始条件", e:"全球观测"},
+          {t:"物理定律", e:"如何演化"},
+        ]},
+        {t:"如何预报", c:[
+          {t:"大气五大方程"},
+          {t:"数据同化", e:"卫星数据最多"},
+          {t:"有限差分 · ManUniCast"},
+        ]},
+        {t:"出错三原因", c:[
+          {t:"初始条件误差", e:"数据空白区"},
+          {t:"模型/参数化不完美"},
+          {t:"混沌"},
+        ]},
+        {t:"两周上限", c:[
+          {t:"Lorenz · 蝴蝶效应"},
+          {t:"对初始条件敏感依赖"},
+        ]},
+        {t:"温带气旋 & 安全", c:[
+          {t:"挪威气旋模型", e:"锢囚 occlusion"},
+          {t:"南北半球镜像", e:"逆/顺时针"},
+          {t:"闪电 30-30", e:"听到雷声进室内"},
+          {t:"洪水", e:"掉头别淹死·15/30/60cm"},
+        ]},
+      ]},
+      { week:"W6", t:"大气化学与海洋", c:[
+        {t:"平流层臭氧", c:[
+          {t:"Chapman 循环", e:"4反应·维持臭氧层"},
+          {t:"催化循环", e:"X偷氧·不被消耗"},
+          {t:"氯来源", e:"火山/CFCs·蒙特利尔议定书"},
+        ]},
+        {t:"极地臭氧洞", c:[
+          {t:"极涡 polar vortex", e:"隔离"},
+          {t:"冬季下沉(必要条件)→PSCs"},
+          {t:"春季阳光→释放氯→破坏"},
+        ]},
+        {t:"对流层", c:[
+          {t:"一次污染物", e:"SO₂/NOx/VOC"},
+          {t:"二次污染物", e:"臭氧/硫酸/硝酸"},
+          {t:"臭氧:平流层好/对流层坏"},
+          {t:"PM2.5/PM10 · 伦敦烟雾(逆温)"},
+        ]},
+        {t:"海洋", c:[
+          {t:"温跃层 thermocline", e:"分层"},
+          {t:"环流·西边界暖流", e:"湾流/黑潮"},
+          {t:"盐度", e:"E>P → 副热带最高"},
+        ]},
+        {t:"埃克曼 & 波浪", c:[
+          {t:"埃克曼输送", e:"北半球风右90°"},
+          {t:"上升流", e:"冷·富营养·高生产力"},
+          {t:"波只传能不传水·离岸流·海啸"},
+          {t:"潮汐", e:"月(主)+日"},
+        ]},
+      ]},
+      { week:"W8", t:"冰冻圈与气候建模", c:[
+        {t:"冰冻圈", c:[
+          {t:"组成", e:"海冰/冰盖/冰川/永久冻土/雪"},
+          {t:"云中冰晶 ≠ 冰冻圈"},
+          {t:"南北半球差异·北极更敏感"},
+        ]},
+        {t:"气候模型", c:[
+          {t:"Bjerknes 扩展到全圈层"},
+          {t:"耦合史", e:"大气→海气→冰/碳"},
+          {t:"分辨率 · FOAM"},
+        ]},
+        {t:"输入 vs 输出", c:[
+          {t:"输入", e:"温室气体/初始/边界/外强迫"},
+          {t:"输出", e:"海冰/风/温/流"},
+          {t:"初始条件因混沌很快失效"},
+        ]},
+        {t:"雪球地球", c:[
+          {t:"进入", e:"低纬反照率正反馈"},
+          {t:"退出", e:"火山CO₂累积"},
+          {t:"Kenorland", e:"反照率 > 地形"},
+        ]},
+        {t:"古气候", c:[
+          {t:"北极放大"},
+          {t:"米兰科维奇 + 内部反馈", e:"非仅轨道"},
+          {t:"上新世 = 上次420ppm"},
+          {t:"温室期环流减弱"},
+        ]},
+      ]},
+      { week:"W11", t:"气候反馈(综合)", c:[
+        {t:"强迫与响应", c:[
+          {t:"正反馈", e:"放大变化"},
+          {t:"负反馈", e:"调节趋稳"},
+        ]},
+        {t:"硅酸盐风化", c:[
+          {t:"移除 CO₂ · 负反馈"},
+          {t:"温度调节器"},
+        ]},
+        {t:"冰-反照率", c:[
+          {t:"正反馈 · 连雪球地球"},
+        ]},
+        {t:"地质史反馈", c:[
+          {t:"冰川圆锯", e:"限制山高·高纬失效"},
+          {t:"罗迪尼亚裂解 → 雪球", e:"+热带玄武岩·GEOCLIM"},
+          {t:"极赤温度梯度", e:"白垩纪弱→缺氧→黑页岩"},
+        ]},
+        {t:"人为变化", c:[
+          {t:"影响五大圈层", e:"西伯利亚天坑·京都樱花"},
+          {t:"行星环流恒定", e:"哈德利/急流"},
+          {t:"野外警示", e:"气候变化 vs 古纬度漂移"},
+        ]},
+      ]},
+    ]},
+  ]
+};
+
+const tree = document.getElementById('tree');
+function makeNode(d, group, level){
+  const li = document.createElement('li');
+  const g = d.g || group;
+  if(d.root) li.className='root'; else li.className='g-'+g+' lvl'+level;
+  const node=document.createElement('div'); node.className='node';
+  const hasKids=d.c && d.c.length;
+  if(hasKids) node.classList.add('has-children');
+  if(hasKids||d.root){const tg=document.createElement('span');tg.className='toggle';node.appendChild(tg);}
+  if(d.week){const b=document.createElement('span');b.className='week-badge';b.textContent=d.week;node.appendChild(b);}
+  if(!hasKids){const lm=document.createElement('span');lm.className='leaf-mark';node.appendChild(lm);}
+  const tw=document.createElement('span');tw.className='tw';tw.textContent=d.t;node.appendChild(tw);
+  if(d.e){const te=document.createElement('span');te.className='te';te.textContent=d.e;node.appendChild(te);}
+  li.appendChild(node);
+  if(hasKids){
+    const ul=document.createElement('ul');
+    d.c.forEach(ch=>ul.appendChild(makeNode(ch,g,level+1)));
+    li.appendChild(ul);
+    node.addEventListener('click',e=>{e.stopPropagation();li.classList.toggle('collapsed');});
+  }
+  return li;
+}
+tree.appendChild(makeNode(DATA,null,0));
+
+const allLi=()=>document.querySelectorAll('.tree li');
+function expandAll(){allLi().forEach(li=>li.classList.remove('collapsed'));}
+// collapse to week: hide everything below week-badge nodes
+function toWeek(){
+  expandAll();
+  allLi().forEach(li=>{ if(li.querySelector(':scope > .node .week-badge')) li.classList.add('collapsed'); });
+}
+// collapse to concept: show down to concept level, hide the deepest detail.
+// concept = li that has children, but none of its children have children (their ul holds only leaves)
+function toConcept(){
+  expandAll();
+  allLi().forEach(li=>{
+    const childLis=li.querySelectorAll(':scope > ul > li');
+    if(childLis.length===0) return;
+    let anyGrand=false;
+    childLis.forEach(c=>{ if(c.querySelector(':scope > ul')) anyGrand=true; });
+    if(!anyGrand) li.classList.add('collapsed');  // this li's children are all leaves → it's a concept
+  });
+}
+document.getElementById('expandAll').onclick=expandAll;
+document.getElementById('toConcept').onclick=toConcept;
+document.getElementById('toWeek').onclick=toWeek;
+toWeek(); // default
+</script>
+</body>
+</html>
