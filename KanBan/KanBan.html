@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>復習看板 · Revision Kanban</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600&family=Zen+Kaku+Gothic+New:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f4f0e6;
+    --paper-2:#efe9da;
+    --card:#fbf8f0;
+    --ink:#2b2a26;
+    --ink-soft:#736f64;
+    --ink-faint:#a39e90;
+    --line:#ddd5c2;
+    --line-soft:#e7e0cf;
+    --shu:#b4452f;
+    --shu-soft:#c96a52;
+    --mincho:"Shippori Mincho","Yu Mincho","Hiragino Mincho ProN","Songti SC","Source Han Serif SC",Georgia,serif;
+    --gothic:"Zen Kaku Gothic New","Hiragino Sans","PingFang SC","Microsoft YaHei",-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    font-family:var(--gothic);
+    color:var(--ink);
+    background-color:var(--paper);
+    background-image:
+      radial-gradient(circle at 18% 12%, rgba(255,255,255,.5), transparent 45%),
+      radial-gradient(circle at 82% 78%, rgba(180,69,47,.04), transparent 40%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+    min-height:100vh;
+    display:flex;flex-direction:column;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ---------- header ---------- */
+  header{
+    padding:22px 20px 14px;
+    border-bottom:1px solid var(--line);
+    position:relative;
+  }
+  .title-row{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;}
+  .seal{
+    font-family:var(--mincho);
+    writing-mode:vertical-rl;
+    background:var(--shu);
+    color:#f7efe2;
+    font-size:13px;letter-spacing:3px;
+    padding:7px 5px;border-radius:3px;
+    line-height:1.1;
+    box-shadow:0 1px 0 rgba(0,0,0,.12);
+    user-select:none;
+  }
+  h1{font-family:var(--mincho);font-weight:600;font-size:27px;letter-spacing:2px;line-height:1;}
+  .sub{font-size:11px;color:var(--ink-soft);letter-spacing:2px;margin-top:5px;text-transform:uppercase;}
+  .meta{margin-left:auto;text-align:right;}
+  .count{font-family:var(--mincho);font-size:15px;color:var(--ink-soft);}
+  .count b{color:var(--shu);font-size:20px;}
+  .bar{width:160px;height:5px;background:var(--line-soft);border-radius:3px;margin-top:7px;overflow:hidden;}
+  .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--shu-soft),var(--shu));width:0;transition:width .5s ease;}
+
+  /* ---------- toolbar ---------- */
+  .toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:14px;}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;flex:1;min-width:0;}
+  .chip{
+    font-family:var(--gothic);font-size:12px;
+    padding:5px 11px;border-radius:20px;cursor:pointer;
+    border:1px solid var(--line);background:transparent;color:var(--ink-soft);
+    display:flex;align-items:center;gap:6px;transition:.15s;white-space:nowrap;
+  }
+  .chip .dot{width:8px;height:8px;border-radius:50%;}
+  .chip.active{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+  .chip.all.active{background:var(--shu);border-color:var(--shu);}
+  .btn{
+    font-family:var(--gothic);font-size:13px;
+    padding:7px 14px;border-radius:6px;cursor:pointer;border:1px solid var(--ink);
+    background:var(--ink);color:var(--paper);transition:.15s;white-space:nowrap;
+  }
+  .btn:hover{background:#000;}
+  .btn.ghost{background:transparent;color:var(--ink-soft);border-color:var(--line);}
+  .btn.ghost:hover{border-color:var(--ink-soft);color:var(--ink);}
+
+  /* ---------- board ---------- */
+  .board{
+    flex:1;display:flex;gap:14px;padding:18px 20px 28px;
+    overflow-x:auto;scroll-snap-type:x proximity;align-items:flex-start;
+  }
+  .col{
+    flex:0 0 286px;scroll-snap-align:start;
+    background:rgba(255,255,255,.32);
+    border:1px solid var(--line);border-radius:10px;
+    display:flex;flex-direction:column;max-height:100%;
+  }
+  .col.drag-over{border-color:var(--shu);background:rgba(180,69,47,.05);}
+  .col-head{padding:13px 14px 11px;border-bottom:1px solid var(--line-soft);display:flex;align-items:baseline;gap:8px;}
+  .col-kanji{font-family:var(--mincho);font-size:17px;font-weight:600;letter-spacing:1px;}
+  .col-cn{font-size:11px;color:var(--ink-soft);}
+  .col-num{margin-left:auto;font-family:var(--mincho);font-size:13px;color:var(--ink-faint);}
+  .col.c0 .col-kanji{color:#6f6f6a;}
+  .col.c1 .col-kanji{color:#2f4858;}
+  .col.c2 .col-kanji{color:var(--shu);}
+  .col.c3 .col-kanji{color:#7c8a4e;}
+  .cards{padding:10px;display:flex;flex-direction:column;gap:9px;overflow-y:auto;min-height:60px;}
+  .empty-col{font-size:11px;color:var(--ink-faint);text-align:center;padding:14px 0;font-family:var(--mincho);letter-spacing:1px;}
+
+  /* ---------- card ---------- */
+  .card{
+    background:var(--card);border:1px solid var(--line-soft);
+    border-left:3px solid var(--ink-faint);
+    border-radius:7px;padding:11px 11px 9px;cursor:grab;
+    box-shadow:0 1px 2px rgba(43,42,38,.05);transition:.15s;
+    animation:rise .3s ease both;
+  }
+  @keyframes rise{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+  .card:hover{box-shadow:0 3px 9px rgba(43,42,38,.1);transform:translateY(-1px);}
+  .card.dragging{opacity:.4;}
+  .card-top{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
+  .tag{font-size:10px;padding:2px 8px;border-radius:11px;color:#fff;letter-spacing:.5px;white-space:nowrap;}
+  .pri{font-family:var(--mincho);font-size:12px;color:var(--shu);font-weight:600;}
+  .due{margin-left:auto;font-size:10px;color:var(--ink-soft);font-family:var(--mincho);display:flex;align-items:center;gap:3px;}
+  .due.soon{color:var(--shu);font-weight:600;}
+  .card-title{font-size:14px;line-height:1.45;word-break:break-word;}
+  .card-note{font-size:11px;color:var(--ink-soft);margin-top:5px;line-height:1.5;white-space:pre-wrap;word-break:break-word;}
+  .card-foot{display:flex;align-items:center;gap:2px;margin-top:9px;padding-top:7px;border-top:1px dashed var(--line-soft);}
+  .icon{
+    width:26px;height:24px;border:none;background:transparent;cursor:pointer;
+    color:var(--ink-faint);font-size:14px;border-radius:5px;display:flex;align-items:center;justify-content:center;transition:.12s;
+  }
+  .icon:hover{background:var(--paper-2);color:var(--ink);}
+  .icon:disabled{opacity:.25;cursor:default;}
+  .icon.del:hover{color:var(--shu);background:rgba(180,69,47,.08);}
+  .move{margin-left:auto;display:flex;gap:1px;}
+
+  /* ---------- modal ---------- */
+  .overlay{position:fixed;inset:0;background:rgba(43,42,38,.4);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;padding:18px;z-index:50;}
+  .overlay.show{display:flex;animation:fade .2s ease;}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .modal{
+    background:var(--paper);border:1px solid var(--line);border-radius:12px;
+    width:100%;max-width:380px;padding:22px;box-shadow:0 16px 48px rgba(0,0,0,.25);
+    max-height:90vh;overflow-y:auto;animation:pop .22s cubic-bezier(.2,.9,.3,1.2);
+  }
+  @keyframes pop{from{opacity:0;transform:scale(.95) translateY(8px)}to{opacity:1;transform:none}}
+  .modal h2{font-family:var(--mincho);font-size:19px;font-weight:600;letter-spacing:1px;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+  .modal h2 .k{color:var(--shu);}
+  label{display:block;font-size:11px;color:var(--ink-soft);letter-spacing:1px;margin:13px 0 5px;}
+  input[type=text],textarea,select,input[type=date]{
+    width:100%;font-family:var(--gothic);font-size:14px;color:var(--ink);
+    padding:9px 11px;border:1px solid var(--line);border-radius:7px;background:var(--card);
+  }
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--shu-soft);}
+  textarea{resize:vertical;min-height:54px;}
+  .row{display:flex;gap:10px;}
+  .row>div{flex:1;}
+  .chk{display:flex;align-items:center;gap:8px;margin-top:14px;font-size:13px;cursor:pointer;}
+  .chk input{width:16px;height:16px;accent-color:var(--shu);}
+  .modal-foot{display:flex;gap:9px;margin-top:22px;}
+  .modal-foot .btn{flex:1;text-align:center;padding:10px;}
+  .swatches{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;}
+  .sw{width:30px;height:30px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:.12s;}
+  .sw.sel{border-color:var(--ink);transform:scale(1.08);}
+  .subj-list{display:flex;flex-direction:column;gap:7px;margin-top:6px;}
+  .subj-item{display:flex;align-items:center;gap:9px;padding:6px 9px;border:1px solid var(--line-soft);border-radius:7px;background:var(--card);}
+  .subj-item .dot{width:13px;height:13px;border-radius:50%;flex:0 0 auto;}
+  .subj-item span{flex:1;font-size:13px;}
+  .subj-item button{border:none;background:transparent;color:var(--ink-faint);cursor:pointer;font-size:15px;}
+  .subj-item button:hover{color:var(--shu);}
+  .hint{font-size:11px;color:var(--ink-faint);margin-top:8px;line-height:1.5;}
+  footer{padding:10px 20px;border-top:1px solid var(--line);display:flex;align-items:center;gap:10px;font-size:11px;color:var(--ink-faint);}
+  footer .save-state{margin-left:auto;font-family:var(--mincho);letter-spacing:1px;}
+  ::-webkit-scrollbar{height:8px;width:8px;}
+  ::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px;}
+</style>
+</head>
+<body>
+  <header>
+    <div class="title-row">
+      <div class="seal">復習</div>
+      <div>
+        <h1>復習看板</h1>
+        <div class="sub">Revision Kanban · for the long term</div>
+      </div>
+      <div class="meta">
+        <div class="count">修得 <b id="doneN">0</b> <span style="font-size:12px">/ <span id="totalN">0</span></span></div>
+        <div class="bar"><i id="barFill"></i></div>
+      </div>
+    </div>
+    <div class="toolbar">
+      <div class="chips" id="chips"></div>
+      <button class="btn ghost" id="subjBtn">科目</button>
+      <button class="btn" id="addBtn">＋ 新建</button>
+    </div>
+  </header>
+
+  <div class="board" id="board"></div>
+
+  <footer>
+    <button class="btn ghost" id="resetBtn" style="font-size:11px;padding:5px 10px;">清空全部</button>
+    <span>拖拽卡片或用 ◀ ▶ 移动 · 数据自动保存</span>
+    <span class="save-state" id="saveState">已保存</span>
+  </footer>
+
+  <!-- card modal -->
+  <div class="overlay" id="cardOverlay">
+    <div class="modal">
+      <h2><span class="k">編</span><span id="cardModalTitle">新建卡片</span></h2>
+      <label>复习内容</label>
+      <input type="text" id="fTitle" placeholder="例：板块构造 — 三类边界" autocomplete="off">
+      <label>科目</label>
+      <select id="fSubject"></select>
+      <div class="row">
+        <div>
+          <label>截止日（可选）</label>
+          <input type="date" id="fDue">
+        </div>
+      </div>
+      <label>备注（可选）</label>
+      <textarea id="fNote" placeholder="重点公式、易错点、参考页码…"></textarea>
+      <label class="chk"><input type="checkbox" id="fPri"> 标记为重点</label>
+      <div class="modal-foot">
+        <button class="btn ghost" id="cardCancel">取消</button>
+        <button class="btn" id="cardSave">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- subject modal -->
+  <div class="overlay" id="subjOverlay">
+    <div class="modal">
+      <h2><span class="k">科</span>科目管理</h2>
+      <div class="subj-list" id="subjList"></div>
+      <label>新增科目</label>
+      <input type="text" id="newSubjName" placeholder="科目名称，如 Geochemistry" autocomplete="off">
+      <div class="swatches" id="swatches"></div>
+      <div class="modal-foot">
+        <button class="btn ghost" id="subjClose">完成</button>
+        <button class="btn" id="subjAdd">添加</button>
+      </div>
+      <p class="hint">删除科目不会删除卡片，卡片会变为「未分类」。</p>
+    </div>
+  </div>
+
+  <!-- confirm dialog -->
+  <div class="overlay" id="confirmOverlay">
+    <div class="modal" style="max-width:320px">
+      <h2><span class="k">確</span><span id="confirmMsg">确认</span></h2>
+      <div class="modal-foot">
+        <button class="btn ghost" id="confirmNo">取消</button>
+        <button class="btn" id="confirmYes">确定</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+const KEY = "revision-kanban:v1";
+const COLUMNS = [
+  {id:"c0", kanji:"未着手", cn:"待复习"},
+  {id:"c1", kanji:"復習中", cn:"复习中"},
+  {id:"c2", kanji:"要再読", cn:"需巩固"},
+  {id:"c3", kanji:"修得",   cn:"已掌握"},
+];
+const PALETTE = ["#2f4858","#a23b3b","#7c8a4e","#7d6a9c","#c08a2e","#3f8585","#bd7a86","#6f6f6a"];
+
+let state = { subjects:[], cards:[] };
+let filter = "all";
+let editingId = null;
+let pickedColor = PALETTE[0];
+
+const uid = () => Math.random().toString(36).slice(2,9);
+const $ = s => document.querySelector(s);
+
+/* native confirm() is disabled in the sandboxed iframe, so use an in-DOM dialog */
+function askConfirm(msg){
+  return new Promise(res=>{
+    $("#confirmMsg").textContent = msg;
+    const ov = $("#confirmOverlay"), yes = $("#confirmYes"), no = $("#confirmNo");
+    ov.classList.add("show");
+    const done = v => { ov.classList.remove("show"); yes.onclick=null; no.onclick=null; res(v); };
+    yes.onclick = ()=>done(true);
+    no.onclick  = ()=>done(false);
+  });
+}
+
+/* ---------- persistence ---------- */
+async function load(){
+  if(!window.storage) return false;
+  try{
+    const r = await window.storage.get(KEY);
+    if(r && r.value){ state = JSON.parse(r.value); return true; }
+  }catch(e){ /* no data yet */ }
+  return false;
+}
+let saveTimer=null;
+function setSaveState(t){ const el=$("#saveState"); if(el) el.textContent=t; }
+function save(){
+  setSaveState("保存中…");
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async ()=>{
+    if(!window.storage){ setSaveState("仅本次会话"); return; }
+    // some runtimes reject the optional 3rd arg; personal scope is the default
+    try{
+      await window.storage.set(KEY, JSON.stringify(state));
+      setSaveState("已保存");
+    }catch(e){
+      try{ await window.storage.set(KEY, JSON.stringify(state)); setSaveState("已保存"); }
+      catch(e2){ console.warn("persist failed", e2); setSaveState("未保存·仅本次"); }
+    }
+  }, 350);
+}
+
+/* ---------- seed first run ---------- */
+function seed(){
+  const s1=uid(), s2=uid(), s3=uid();
+  state.subjects = [
+    {id:s1, name:"Petrology", color:"#2f4858"},
+    {id:s2, name:"Geochemistry", color:"#a23b3b"},
+    {id:s3, name:"Geophysics", color:"#7c8a4e"},
+  ];
+  state.cards = [
+    {id:uid(), title:"火成岩分类 — QAPF 图", subj:s1, col:"c0", pri:true, due:"", note:"分清侵入岩 / 喷出岩命名"},
+    {id:uid(), title:"等压线与地温梯度", subj:s3, col:"c1", pri:false, due:"", note:""},
+    {id:uid(), title:"同位素分馏 — δ¹⁸O", subj:s2, col:"c2", pri:true, due:"", note:"轻重同位素优先去向，记反了"},
+    {id:uid(), title:"矿物解理与断口", subj:s1, col:"c3", pri:false, due:"", note:""},
+  ];
+}
+
+/* ---------- helpers ---------- */
+function subjById(id){ return state.subjects.find(s=>s.id===id); }
+function daysTo(dateStr){
+  if(!dateStr) return null;
+  const d = new Date(dateStr+"T00:00:00");
+  const now = new Date(); now.setHours(0,0,0,0);
+  return Math.round((d-now)/86400000);
+}
+
+/* ---------- render ---------- */
+function render(){
+  renderChips();
+  renderBoard();
+  renderStats();
+}
+
+function renderStats(){
+  const total = state.cards.length;
+  const done = state.cards.filter(c=>c.col==="c3").length;
+  $("#doneN").textContent = done;
+  $("#totalN").textContent = total;
+  $("#barFill").style.width = total ? (done/total*100)+"%" : "0%";
+}
+
+function renderChips(){
+  const box = $("#chips"); box.innerHTML="";
+  const all = document.createElement("button");
+  all.className = "chip all"+(filter==="all"?" active":"");
+  all.textContent = "全部";
+  all.onclick = ()=>{ filter="all"; render(); };
+  box.appendChild(all);
+  state.subjects.forEach(s=>{
+    const c = document.createElement("button");
+    c.className="chip"+(filter===s.id?" active":"");
+    c.innerHTML = `<span class="dot" style="background:${s.color}"></span>${escapeHtml(s.name)}`;
+    c.onclick = ()=>{ filter = (filter===s.id?"all":s.id); render(); };
+    box.appendChild(c);
+  });
+}
+
+function renderBoard(){
+  const board = $("#board"); board.innerHTML="";
+  COLUMNS.forEach((col,ci)=>{
+    const list = state.cards.filter(c=>c.col===col.id && (filter==="all"||c.subj===filter));
+    const colEl = document.createElement("div");
+    colEl.className = "col "+col.id;
+    colEl.dataset.col = col.id;
+    colEl.innerHTML = `
+      <div class="col-head">
+        <span class="col-kanji">${col.kanji}</span>
+        <span class="col-cn">${col.cn}</span>
+        <span class="col-num">${list.length}</span>
+      </div>
+      <div class="cards"></div>`;
+    const cardsBox = colEl.querySelector(".cards");
+    if(list.length===0){
+      const e=document.createElement("div"); e.className="empty-col"; e.textContent="—"; cardsBox.appendChild(e);
+    }
+    list.forEach(card=> cardsBox.appendChild(cardEl(card, ci)));
+
+    // drag targets
+    colEl.addEventListener("dragover", e=>{ e.preventDefault(); colEl.classList.add("drag-over"); });
+    colEl.addEventListener("dragleave", ()=> colEl.classList.remove("drag-over"));
+    colEl.addEventListener("drop", e=>{
+      e.preventDefault(); colEl.classList.remove("drag-over");
+      const id = e.dataTransfer.getData("id");
+      const c = state.cards.find(x=>x.id===id);
+      if(c && c.col!==col.id){ c.col=col.id; save(); render(); }
+    });
+    board.appendChild(colEl);
+  });
+}
+
+function cardEl(card, ci){
+  const s = subjById(card.subj);
+  const el = document.createElement("div");
+  el.className="card";
+  el.style.borderLeftColor = s ? s.color : "var(--ink-faint)";
+  el.draggable = true;
+
+  const d = daysTo(card.due);
+  let dueHtml="";
+  if(d!==null){
+    const soon = d<=3;
+    const label = d<0 ? `已逾期 ${-d}d` : d===0 ? "今天" : `剩 ${d}d`;
+    dueHtml = `<span class="due${soon?' soon':''}">試 ${label}</span>`;
+  }
+  el.innerHTML = `
+    <div class="card-top">
+      ${s?`<span class="tag" style="background:${s.color}">${escapeHtml(s.name)}</span>`:`<span class="tag" style="background:#a39e90">未分类</span>`}
+      ${card.pri?'<span class="pri">重</span>':''}
+      ${dueHtml}
+    </div>
+    <div class="card-title">${escapeHtml(card.title)}</div>
+    ${card.note?`<div class="card-note">${escapeHtml(card.note)}</div>`:''}
+    <div class="card-foot">
+      <button class="icon edit" title="编辑">✎</button>
+      <button class="icon del" title="删除">×</button>
+      <span class="move">
+        <button class="icon left" title="前移" ${ci===0?'disabled':''}>◀</button>
+        <button class="icon right" title="后移" ${ci===3?'disabled':''}>▶</button>
+      </span>
+    </div>`;
+
+  el.addEventListener("dragstart", e=>{ e.dataTransfer.setData("id", card.id); el.classList.add("dragging"); });
+  el.addEventListener("dragend", ()=> el.classList.remove("dragging"));
+  el.querySelector(".edit").onclick = ()=> openCard(card.id);
+  el.querySelector(".del").onclick = async ()=>{
+    if(await askConfirm("删除这张卡片？")){ state.cards = state.cards.filter(c=>c.id!==card.id); save(); render(); }
+  };
+  el.querySelector(".left").onclick = ()=> moveCard(card.id, -1);
+  el.querySelector(".right").onclick = ()=> moveCard(card.id, 1);
+  return el;
+}
+
+function moveCard(id, dir){
+  const c = state.cards.find(x=>x.id===id);
+  const idx = COLUMNS.findIndex(col=>col.id===c.col);
+  const ni = idx+dir;
+  if(ni>=0 && ni<COLUMNS.length){ c.col=COLUMNS[ni].id; save(); render(); }
+}
+
+function escapeHtml(str){ return (str||"").replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+/* ---------- card modal ---------- */
+function openCard(id){
+  editingId = id||null;
+  const sel = $("#fSubject");
+  sel.innerHTML = state.subjects.map(s=>`<option value="${s.id}">${escapeHtml(s.name)}</option>`).join("") || `<option value="">（无科目）</option>`;
+  if(id){
+    const c = state.cards.find(x=>x.id===id);
+    $("#cardModalTitle").textContent="编辑卡片";
+    $("#fTitle").value=c.title; sel.value=c.subj||""; $("#fDue").value=c.due||"";
+    $("#fNote").value=c.note||""; $("#fPri").checked=!!c.pri;
+  }else{
+    $("#cardModalTitle").textContent="新建卡片";
+    $("#fTitle").value=""; $("#fDue").value=""; $("#fNote").value=""; $("#fPri").checked=false;
+  }
+  $("#cardOverlay").classList.add("show");
+  setTimeout(()=>$("#fTitle").focus(),50);
+}
+function closeCard(){ $("#cardOverlay").classList.remove("show"); }
+function saveCard(){
+  const title = $("#fTitle").value.trim();
+  if(!title){ $("#fTitle").focus(); return; }
+  const data = { title, subj:$("#fSubject").value, due:$("#fDue").value, note:$("#fNote").value.trim(), pri:$("#fPri").checked };
+  if(editingId){ Object.assign(state.cards.find(c=>c.id===editingId), data); }
+  else{ state.cards.push({ id:uid(), col:"c0", ...data }); }
+  save(); render(); closeCard();
+}
+
+/* ---------- subject modal ---------- */
+function openSubj(){
+  renderSubjList(); renderSwatches(); $("#newSubjName").value="";
+  $("#subjOverlay").classList.add("show");
+}
+function renderSubjList(){
+  const box=$("#subjList"); box.innerHTML="";
+  if(!state.subjects.length){ box.innerHTML=`<p class="hint">还没有科目，先在下面添加一个。</p>`; }
+  state.subjects.forEach(s=>{
+    const it=document.createElement("div"); it.className="subj-item";
+    it.innerHTML=`<span class="dot" style="background:${s.color}"></span><span>${escapeHtml(s.name)}</span><button title="删除">×</button>`;
+    it.querySelector("button").onclick=()=>{
+      state.subjects=state.subjects.filter(x=>x.id!==s.id);
+      state.cards.forEach(c=>{ if(c.subj===s.id) c.subj=""; });
+      if(filter===s.id) filter="all";
+      save(); renderSubjList(); render();
+    };
+    box.appendChild(it);
+  });
+}
+function renderSwatches(){
+  const box=$("#swatches"); box.innerHTML="";
+  PALETTE.forEach(col=>{
+    const sw=document.createElement("div");
+    sw.className="sw"+(col===pickedColor?" sel":""); sw.style.background=col;
+    sw.onclick=()=>{ pickedColor=col; renderSwatches(); };
+    box.appendChild(sw);
+  });
+}
+function addSubj(){
+  const name=$("#newSubjName").value.trim();
+  if(!name) return;
+  state.subjects.push({id:uid(), name, color:pickedColor});
+  $("#newSubjName").value="";
+  pickedColor = PALETTE[(state.subjects.length)%PALETTE.length];
+  save(); renderSubjList(); renderSwatches(); render();
+}
+
+/* ---------- events ---------- */
+$("#addBtn").onclick = ()=> openCard(null);
+$("#cardCancel").onclick = closeCard;
+$("#cardSave").onclick = saveCard;
+$("#fTitle").addEventListener("keydown", e=>{ if(e.key==="Enter") saveCard(); });
+$("#subjBtn").onclick = openSubj;
+$("#subjClose").onclick = ()=> $("#subjOverlay").classList.remove("show");
+$("#subjAdd").onclick = addSubj;
+$("#newSubjName").addEventListener("keydown", e=>{ if(e.key==="Enter") addSubj(); });
+$("#resetBtn").onclick = async ()=>{
+  if(await askConfirm("清空所有科目和卡片？此操作无法撤销。")){ state={subjects:[],cards:[]}; filter="all"; save(); render(); }
+};
+[ "#cardOverlay","#subjOverlay" ].forEach(id=>{
+  $(id).addEventListener("click", e=>{ if(e.target===$(id)) $(id).classList.remove("show"); });
+});
+
+/* ---------- boot ---------- */
+(async ()=>{
+  const had = await load();
+  if(!had || (!state.subjects.length && !state.cards.length)){ seed(); save(); }
+  render();
+})();
+</script>
+</body>
+</html>
