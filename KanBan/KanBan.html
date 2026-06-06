@@ -256,7 +256,7 @@
   </div>
 
 <script>
-const KEY = "revision-kanban:v1";
+const KEY = "revision-kanban:v2";
 const COLUMNS = [
   {id:"c0", kanji:"未着手", cn:"待复习"},
   {id:"c1", kanji:"復習中", cn:"复习中"},
@@ -310,22 +310,6 @@ function save(){
       catch(e2){ console.warn("persist failed", e2); setSaveState("未保存·仅本次"); }
     }
   }, 350);
-}
-
-/* ---------- seed first run ---------- */
-function seed(){
-  const s1=uid(), s2=uid(), s3=uid();
-  state.subjects = [
-    {id:s1, name:"Petrology", color:"#2f4858"},
-    {id:s2, name:"Geochemistry", color:"#a23b3b"},
-    {id:s3, name:"Geophysics", color:"#7c8a4e"},
-  ];
-  state.cards = [
-    {id:uid(), title:"火成岩分类 — QAPF 图", subj:s1, col:"c0", pri:true, due:"", note:"分清侵入岩 / 喷出岩命名"},
-    {id:uid(), title:"等压线与地温梯度", subj:s3, col:"c1", pri:false, due:"", note:""},
-    {id:uid(), title:"同位素分馏 — δ¹⁸O", subj:s2, col:"c2", pri:true, due:"", note:"轻重同位素优先去向，记反了"},
-    {id:uid(), title:"矿物解理与断口", subj:s1, col:"c3", pri:false, due:"", note:""},
-  ];
 }
 
 /* ---------- helpers ---------- */
@@ -535,8 +519,7 @@ $("#resetBtn").onclick = async ()=>{
 
 /* ---------- boot ---------- */
 (async ()=>{
-  const had = await load();
-  if(!had || (!state.subjects.length && !state.cards.length)){ seed(); save(); }
+  await load();
   render();
 })();
 </script>
