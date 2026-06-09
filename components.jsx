@@ -1,31 +1,68 @@
-/* ============ Custom cursor ============ */
+/* ════════════════════════════════════════════════════════
+   FIELD NOTEBOOK · components
+   ════════════════════════════════════════════════════════ */
+
+/* ── hooks ── */
+
+function useReveal() {
+  React.useEffect(() => {
+    const io = new IntersectionObserver(
+      (entries) => entries.forEach((e) => {
+        if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
+      }),
+      { threshold: 0.08 }
+    );
+    // observe current and future .reveal nodes
+    const scan = () => document.querySelectorAll(".reveal:not(.in)").forEach((el) => io.observe(el));
+    scan();
+    const mo = new MutationObserver(scan);
+    mo.observe(document.body, { childList: true, subtree: true });
+    return () => { io.disconnect(); mo.disconnect(); };
+  }, []);
+}
+
+function useScrollSpy(ids) {
+  const [active, setActive] = React.useState(ids[0]);
+  React.useEffect(() => {
+    const onScroll = () => {
+      const mid = window.innerHeight * 0.42;
+      let current = ids[0];
+      for (const id of ids) {
+        const el = document.getElementById(id);
+        if (el && el.getBoundingClientRect().top <= mid) current = id;
+      }
+      setActive(current);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [ids.join(",")]);
+  return active;
+}
+
+/* ── Crosshair cursor ── */
+
 function CustomCursor() {
-  const dotRef = React.useRef(null);
+  const hRef = React.useRef(null);
+  const vRef = React.useRef(null);
   const ringRef = React.useRef(null);
 
   React.useEffect(() => {
-    let dotX = 0, dotY = 0, ringX = 0, ringY = 0;
-    let mouseX = 0, mouseY = 0;
-    let raf;
-
-    const onMove = (e) => {
-      mouseX = e.clientX;
-      mouseY = e.clientY;
+    let mx = -100, my = -100, rx = -100, ry = -100, raf;
+    const onMove = (e) => { mx = e.clientX; my = e.clientY; };
+    const onOver = (e) => {
+      const t = e.target.closest("a, button, .log-head");
+      ringRef.current && ringRef.current.classList.toggle("active", !!t);
     };
     const tick = () => {
-      dotX += (mouseX - dotX) * 0.6;
-      dotY += (mouseY - dotY) * 0.6;
-      ringX += (mouseX - ringX) * 0.18;
-      ringY += (mouseY - ringY) * 0.18;
-      if (dotRef.current) dotRef.current.style.transform = `translate(${dotX}px, ${dotY}px) translate(-50%, -50%)`;
-      if (ringRef.current) ringRef.current.style.transform = `translate(${ringX}px, ${ringY}px) translate(-50%, -50%)`;
+      rx += (mx - rx) * 0.16;
+      ry += (my - ry) * 0.16;
+      if (hRef.current) hRef.current.style.transform = `translate(${mx - 9}px, ${my}px)`;
+      if (vRef.current) vRef.current.style.transform = `translate(${mx}px, ${my - 9}px)`;
+      if (ringRef.current) ringRef.current.style.transform =
+        `translate(${rx}px, ${ry}px) translate(-50%, -50%)`;
       raf = requestAnimationFrame(tick);
     };
-    const onOver = (e) => {
-      const t = e.target.closest("a, button, .project, .write-row, .links-list li, .mode-btn");
-      if (ringRef.current) ringRef.current.classList.toggle("active", !!t);
-    };
-
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseover", onOver);
     raf = requestAnimationFrame(tick);
@@ -39,157 +76,223 @@ function CustomCursor() {
   return (
     <>
       <div className="cursor-ring" ref={ringRef}></div>
-      <div className="cursor-dot" ref={dotRef}></div>
+      <div className="cursor-h" ref={hRef}></div>
+      <div className="cursor-v" ref={vRef}></div>
     </>
   );
 }
 
-/* ============ Reveal-on-scroll ============ */
-function useReveal() {
-  React.useEffect(() => {
-    const els = document.querySelectorAll(".reveal");
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach((en) => {
-        if (en.isIntersecting) {
-          en.target.classList.add("in");
-          io.unobserve(en.target);
-        }
-      });
-    }, { threshold: 0.12 });
-    els.forEach((el) => io.observe(el));
-    return () => io.disconnect();
-  }, []);
-}
+/* ── Strata data (shared by nav + depth markers) ── */
 
-/* ============ Nav ============ */
+const STRATA = [
+  { id: "hero",       label: "Surface · 地表" },
+  { id: "about",      label: "About · 关于" },
+  { id: "skills",     label: "Toolkit · 工具" },
+  { id: "projects",   label: "Projects · 项目" },
+  { id: "experience", label: "CV · 经历" },
+  { id: "writing",    label: "Writing · 文章" },
+  { id: "contact",    label: "Contact · 联系" },
+];
+
+/* ── Nav (topbar + strata rail) ── */
+
 function Nav({ tweaks, setTweak }) {
   const [scrolled, setScrolled] = React.useState(false);
+  const active = useScrollSpy(STRATA.map((s) => s.id));
+
   React.useEffect(() => {
-    const onS = () => setScrolled(window.scrollY > 24);
-    window.addEventListener("scroll", onS);
-    onS();
-    return () => window.removeEventListener("scroll", onS);
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  const goto = (id) => {
+    const el = document.getElementById(id);
+    el && el.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
-    <header className={`nav ${scrolled ? "scrolled" : ""}`}>
-      <div className="nav-inner">
-        <a className="brand" href="#top">
-          <span className="brand-mark"></span>
-          <span>Yuan Zhao</span>
-          <span className="brand-cn">赵元</span>
-        </a>
-        <nav className="nav-links">
-          <a href="#about">About<span style={{opacity:.5}}> · 关于</span></a>
-          <a href="#work">Work<span style={{opacity:.5}}> · 作品</span></a>
-          <a href="#experience">CV<span style={{opacity:.5}}> · 经历</span></a>
-          <a href="#writing">Writing<span style={{opacity:.5}}> · 文章</span></a>
-          <a href="#contact">Contact<span style={{opacity:.5}}> · 联系</span></a>
+    <>
+      {/* left strata rail */}
+      <nav className="strata-nav" aria-label="Stratigraphic navigation">
+        {STRATA.map((s) => (
           <button
-            className="mode-btn"
-            onClick={() => setTweak("dark", !tweaks.dark)}
-            title="Toggle theme"
+            key={s.id}
+            className="strata-seg"
+            data-for={s.id}
+            data-active={active === s.id ? "true" : "false"}
+            onClick={() => goto(s.id)}
+            title={s.label}
           >
-            {tweaks.dark ? "Light · 浅" : "Dark · 深"}
+            <span className="fill"></span>
+            <span className="seg-label">{s.label}</span>
           </button>
-        </nav>
-      </div>
-    </header>
+        ))}
+      </nav>
+
+      {/* top bar */}
+      <header className={"topbar" + (scrolled ? " scrolled" : "")}>
+        <div className="topbar-inner">
+          <a className="brand" href="#hero" onClick={(e) => { e.preventDefault(); goto("hero"); }}>
+            <span className="mark"></span>
+            <span>{PROFILE.name_en}</span>
+            <span className="cn">{PROFILE.name_cn}</span>
+          </a>
+          <div className="top-links">
+            <a className="hide-sm" href="#projects" onClick={(e) => { e.preventDefault(); goto("projects"); }}>Projects</a>
+            <a className="hide-sm" href="#writing" onClick={(e) => { e.preventDefault(); goto("writing"); }}>Writing</a>
+            <button
+              className="theme-toggle"
+              onClick={() => setTweak("dark", !tweaks.dark)}
+            >
+              {tweaks.dark ? "Day · 昼" : "Night · 夜"}
+            </button>
+          </div>
+        </div>
+      </header>
+    </>
   );
 }
 
-/* ============ Hero ============ */
-function Hero() {
+/* ── Depth marker ── */
+
+function DepthMarker({ depth, note }) {
+  return (
+    <div className="depth-marker reveal" aria-hidden="true">
+      <span className="tick">— {depth}</span>
+      {note && <span>{note}</span>}
+    </div>
+  );
+}
+
+/* ── Hero ── */
+
+function ContourBackdrop() {
+  // hand-drawn-ish nested contour lines
+  return (
+    <div className="contours" aria-hidden="true">
+      <svg viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice">
+        <g>
+          <path d="M 920,180 C 1010,150 1110,200 1130,290 C 1150,380 1080,460 980,470 C 880,480 790,420 780,330 C 770,240 830,210 920,180 Z" />
+          <path d="M 915,215 C 985,192 1070,230 1087,300 C 1104,370 1050,428 970,436 C 890,444 822,398 814,328 C 806,258 845,238 915,215 Z" className="index-line" />
+          <path d="M 912,252 C 962,236 1028,262 1040,313 C 1052,364 1014,404 956,410 C 898,416 850,382 845,330 C 840,278 862,268 912,252 Z" />
+          <path d="M 910,288 C 941,278 982,294 990,326 C 998,358 974,382 938,386 C 902,390 872,370 868,338 C 864,306 879,298 910,288 Z" />
+          <path d="M 140,520 C 240,460 400,470 470,560 C 540,650 480,760 340,780 C 200,800 60,740 40,640 C 20,540 60,568 140,520 Z" />
+          <path d="M 175,556 C 255,508 380,516 436,588 C 492,660 444,746 332,762 C 220,778 110,730 94,650 C 78,570 111,594 175,556 Z" className="index-line" />
+          <path d="M 212,592 C 270,558 360,564 400,616 C 440,668 406,728 326,740 C 246,752 168,718 156,660 C 144,602 168,618 212,592 Z" />
+          <path d="M 250,628 C 285,608 338,612 362,642 C 386,672 366,708 318,715 C 270,722 224,702 217,668 C 210,634 224,643 250,628 Z" />
+          <path d="M 560,80 C 620,40 720,50 750,110 C 780,170 740,240 650,250 C 560,260 480,220 470,160 C 460,100 500,120 560,80 Z" />
+          <path d="M 580,112 C 624,84 696,91 718,135 C 740,179 711,229 645,236 C 579,243 521,214 514,170 C 507,126 536,140 580,112 Z" />
+        </g>
+      </svg>
+    </div>
+  );
+}
+
+function TypeLine() {
+  const lines = TYPED_LINES;
   const [text, setText] = React.useState("");
-  const [lineIdx, setLineIdx] = React.useState(0);
+  const idx = React.useRef(0);
+  const pos = React.useRef(0);
+  const deleting = React.useRef(false);
 
   React.useEffect(() => {
-    const lines = window.TYPED_LINES;
-    let cancelled = false;
-    let i = 0;
-    let mode = "type";
-    let current = "";
-
-    const tick = () => {
-      if (cancelled) return;
-      const line = lines[lineIdx];
-      if (mode === "type") {
-        if (i <= line.length) {
-          current = line.slice(0, i);
-          setText(current);
-          i++;
-          setTimeout(tick, 38 + Math.random() * 30);
-        } else {
-          setTimeout(() => { mode = "hold"; tick(); }, 1800);
+    let t;
+    const step = () => {
+      const line = lines[idx.current % lines.length];
+      if (!deleting.current) {
+        pos.current++;
+        setText(line.slice(0, pos.current));
+        if (pos.current === line.length) {
+          deleting.current = true;
+          t = setTimeout(step, 2300);
+          return;
         }
-      } else if (mode === "hold") {
-        mode = "delete"; tick();
-      } else if (mode === "delete") {
-        if (i >= 0) {
-          current = line.slice(0, i);
-          setText(current);
-          i--;
-          setTimeout(tick, 18);
-        } else {
-          setLineIdx((n) => (n + 1) % lines.length);
+        t = setTimeout(step, 46 + Math.random() * 50);
+      } else {
+        pos.current -= 2;
+        if (pos.current <= 0) {
+          pos.current = 0;
+          deleting.current = false;
+          idx.current++;
+          setText("");
+          t = setTimeout(step, 480);
+          return;
         }
+        setText(line.slice(0, pos.current));
+        t = setTimeout(step, 16);
       }
     };
-    tick();
-    return () => { cancelled = true; };
-  }, [lineIdx]);
+    t = setTimeout(step, 700);
+    return () => clearTimeout(t);
+  }, []);
 
   return (
-    <section id="top" className="section hero">
-      <div className="page">
-        <div className="hero-meta reveal">
-          <span className="dot"></span>
-          <span>Available · open to opportunities</span>
-          <span style={{opacity:.5}}>·</span>
-          <span>Manchester, UK</span>
-        </div>
+    <div className="typeline">
+      {text}<span className="caret"></span>
+    </div>
+  );
+}
 
-        <div className="hero-grid">
-          <div>
-            <h1 className="reveal">
-              Yuan&nbsp;<span className="accent">Zhao</span>.
-              <span className="cn">赵元 · 曼彻斯特大学地球科学</span>
-            </h1>
-            <div className="hero-sub reveal">
-              {text}<span className="caret"></span>
-            </div>
+function Hero() {
+  return (
+    <section id="hero" className="hero">
+      <ContourBackdrop />
+      <div className="wrap hero-grid">
+        <div className="reveal">
+          <div className="hero-coords">
+            <span className="dot"></span>
+            <span>53.4668° N · 2.2339° W — {PROFILE.location}</span>
           </div>
-
-          <div className="reveal" style={{ display: "grid", gap: 16 }}>
-            <div className="portrait" style={{ backgroundImage: 'url("assets/avatar.png")', backgroundSize: "cover", backgroundPosition: "center top" }} aria-label="Yuan Zhao"></div>
-            <div className="hero-card">
-              <div className="label">Studying at</div>
-              <div className="value">
-                Univ. of Manchester
-                <span className="cn">曼彻斯特大学 · 大二</span>
-              </div>
-            </div>
+          <h1 className="hero-name">
+            Yuan <em>Zhao</em>
+          </h1>
+          <div className="hero-name-cn">{PROFILE.name_cn}</div>
+          <TypeLine />
+          <div className="hero-status">
+            <span className="led"></span>
+            <span>Available · open to opportunities</span>
           </div>
         </div>
+
+        <div className="specimen reveal">
+          <div
+            className="photo"
+            style={{ backgroundImage: 'url("assets/avatar.png")' }}
+            aria-label={PROFILE.name_en}
+          ></div>
+          <div className="caption">
+            <span>Plate I</span>
+            <span>{PROFILE.school_en.replace("The ", "")}</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="scroll-cue">
+        <span>Core begins</span>
+        <span className="line"></span>
       </div>
     </section>
   );
 }
 
-/* ============ About ============ */
+/* ── About ── */
+
 function About() {
   return (
-    <section id="about" className="section">
-      <div className="page">
-        <div className="section-head reveal">
-          <div className="section-num">§ 01 · About</div>
-          <h2 className="section-title">
-            A geologist in training.
-            <span className="cn">野外与终端之间。</span>
+    <section id="about">
+      <DepthMarker depth="0 m" note="Topsoil · recent deposits" />
+      <div className="wrap sec-pad">
+        <div className="sec-head reveal">
+          <span className="sec-num">§ 01</span>
+          <h2 className="sec-title">
+            Between the outcrop &amp; the terminal
+            <span className="cn">野外与终端之间</span>
           </h2>
         </div>
 
-        <div className="about-grid about">
-          <div className="en-block reveal">
+        <div className="about-grid">
+          <div className="prose-en reveal">
             <p>
               I'm <strong>Yuan Zhao</strong>, from Shanghai, currently reading
               Earth &amp; Planetary Sciences at the University of Manchester.
@@ -211,21 +314,23 @@ function About() {
             </p>
           </div>
 
-          <div className="cn-block reveal">
-            <p>
-              我是赵元，上海人，曼彻斯特大学地球与行星科学大二学生。
-              选择这条路，有一部分是因为野外——地质给了旅行一个更古老的理由，
-              给了脚下的土地一个可以阅读的文字系统。
-            </p>
-            <p>
-              当前我站在野外与终端之间：<strong>构造地质与沉积学</strong>在一侧，
-              记录着岩层如何书写时间；代码在另一侧，试图把那些书写翻译成可以思考的形状。
-              两件事让我着迷的，都是同一件事——如何读懂一个系统。
-            </p>
-            <p>
-              课业之外，我用卡片机拍照，对军事史有些过度的热情，
-              对神秘学体系保持一种分析式的着迷。以及写代码——不为任何专业理由，只是停不下来。
-            </p>
+          <div className="reveal">
+            <div className="prose-cn">
+              <p>
+                我是赵元，上海人，曼彻斯特大学地球与行星科学大二学生。
+                选择这条路，有一部分是因为野外——地质给了旅行一个更古老的理由，
+                给了脚下的土地一个可以阅读的文字系统。
+              </p>
+              <p>
+                当前我站在野外与终端之间：<strong>构造地质与沉积学</strong>在一侧，
+                记录着岩层如何书写时间；代码在另一侧，试图把那些书写翻译成可以思考的形状。
+                两件事让我着迷的，都是同一件事——如何读懂一个系统。
+              </p>
+              <p>
+                课业之外，我用卡片机拍照，对军事史有些过度的热情，
+                对神秘学体系保持一种分析式的着迷。以及写代码——不为任何专业理由，只是停不下来。
+              </p>
+            </div>
 
             <div className="facts">
               <div className="fact">
@@ -260,32 +365,51 @@ function About() {
   );
 }
 
-/* ============ Skills ============ */
+/* ── Skills: map legend ── */
+
+function gradeLabel(lv) {
+  if (lv >= 4) return ["████", "fluent"];
+  if (lv === 3) return ["███░", "working"];
+  if (lv === 2) return ["██░░", "basic"];
+  return ["█░░░", "aware"];
+}
+
 function Skills() {
   return (
-    <section id="skills" className="section">
-      <div className="page">
-        <div className="section-head reveal">
-          <div className="section-num">§ 02 · Toolkit</div>
-          <h2 className="section-title">
-            How I work.
-            <span className="cn">我的工具与方法。</span>
+    <section id="skills">
+      <DepthMarker depth="120 m" note="Toolkit horizon" />
+      <div className="wrap sec-pad">
+        <div className="sec-head reveal">
+          <span className="sec-num">§ 02</span>
+          <h2 className="sec-title">
+            Legend
+            <span className="cn">图例 · 工具与方法</span>
           </h2>
         </div>
+        <div className="legend-note reveal">
+          Hatching denotes proficiency, after the convention of geological maps.
+        </div>
 
-        <div className="skills">
-          {window.SKILLS.map((g) => (
-            <div className="skill-group reveal" key={g.title_en}>
-              <h4>{g.title_en} · <span style={{fontFamily:"var(--f-cjk-sans)"}}>{g.title_cn}</span></h4>
-              <ul>
-                {g.items.map(([en, cn, lvl]) => (
-                  <li key={en}>
-                    <span className="lbl">{en}<span className="cn">/ {cn}</span></span>
-                    <span className="skill-bar reveal" style={{ "--p": `${lvl * 25}%` }}></span>
-                    <span className="lvl">{"●".repeat(lvl)}{"○".repeat(4 - lvl)}</span>
-                  </li>
-                ))}
-              </ul>
+        <div className="legend-grid">
+          {SKILLS.map((col) => (
+            <div key={col.title_en} className="reveal">
+              <div className="legend-col-title">
+                <span>{col.title_en}</span>
+                <span className="cn">{col.title_cn}</span>
+              </div>
+              {col.items.map(([en, cn, lv]) => {
+                const [bar, word] = gradeLabel(lv);
+                return (
+                  <div className="legend-item" key={en}>
+                    <span className="legend-swatch" data-lv={lv}></span>
+                    <span className="legend-name">
+                      {en}
+                      <span className="cn">{cn}</span>
+                    </span>
+                    <span className="legend-grade"><b>{bar}</b> {word}</span>
+                  </div>
+                );
+              })}
             </div>
           ))}
         </div>
@@ -294,60 +418,62 @@ function Skills() {
   );
 }
 
-/* ============ Projects ============ */
+/* ── Projects: borehole logs ── */
+
 function Projects() {
   const [open, setOpen] = React.useState(null);
+  const bodies = React.useRef({});
+
   return (
-    <section id="work" className="section">
-      <div className="page">
-        <div className="section-head reveal">
-          <div className="section-num">§ 03 · Selected work</div>
-          <h2 className="section-title">
-            Selected projects.
-            <span className="cn">部分项目作品。</span>
+    <section id="projects">
+      <DepthMarker depth="340 m" note="Project-bearing sequence" />
+      <div className="wrap sec-pad">
+        <div className="sec-head reveal">
+          <span className="sec-num">§ 03</span>
+          <h2 className="sec-title">
+            Drill logs
+            <span className="cn">项目记录</span>
           </h2>
         </div>
 
-        <div className="projects">
-          {window.PROJECTS.map((p, idx) => {
-            const isOpen = open === idx;
+        <div className="reveal">
+          {PROJECTS.map((p, i) => {
+            const isOpen = open === i;
             return (
-              <div
-                className="project reveal"
-                data-open={isOpen ? "true" : "false"}
-                key={p.num}
-                onClick={() => setOpen(isOpen ? null : idx)}
-              >
-                <div className="p-num">{p.num}</div>
-                <div>
-                  <div className="p-title">
+              <div className="log" key={p.num} data-open={isOpen ? "true" : "false"}>
+                <button
+                  className="log-head"
+                  onClick={() => setOpen(isOpen ? null : i)}
+                  aria-expanded={isOpen}
+                >
+                  <span className="log-id">
+                    LOG-{p.num}
+                    <span className="yr">{p.year}</span>
+                  </span>
+                  <span className="log-title">
                     {p.title_en}
                     <span className="cn">{p.title_cn}</span>
-                  </div>
-                  <div style={{
-                    maxHeight: isOpen ? "600px" : "0px",
-                    overflow: "hidden",
-                    transition: "max-height 400ms cubic-bezier(.2,.7,.2,1)"
-                  }}>
-                    <div style={{padding: "18px 0 8px", fontSize: 15, color: "var(--ink-soft)", lineHeight: 1.7}}>
-                      <p style={{margin:"0 0 10px"}}>{p.summary_en}</p>
-                      <p style={{margin:"0 0 12px", fontFamily:"var(--f-cjk)"}}>{p.summary_cn}</p>
-                      <div className="tag-row">
-                        {p.tags.map((t) => <span key={t} className="tag">{t}</span>)}
-                      </div>
+                  </span>
+                  <span className="log-meta">{p.type}</span>
+                  <span className="log-toggle">+</span>
+                </button>
+                <div
+                  className="log-body"
+                  style={{
+                    maxHeight: isOpen
+                      ? (bodies.current[i] ? bodies.current[i].scrollHeight + 40 : 800) + "px"
+                      : "0px",
+                    transition: "max-height 420ms cubic-bezier(.2,.7,.2,1)",
+                  }}
+                >
+                  <div className="log-body-inner" ref={(el) => (bodies.current[i] = el)}>
+                    <p className="log-summary-en">{p.summary_en}</p>
+                    <p className="log-summary-cn">{p.summary_cn}</p>
+                    <div className="tag-row">
+                      {p.tags.map((t) => <span className="tag" key={t}>{t}</span>)}
                     </div>
                   </div>
                 </div>
-                <div className="p-meta">
-                  {p.year}<br/>
-                  <span style={{opacity:.7}}>{p.type} · {p.type_cn}</span>
-                </div>
-                <div className="p-toggle" style={{
-                  transform: isOpen ? "rotate(45deg)" : "none",
-                  color: isOpen ? "var(--accent)" : "var(--ink-mute)",
-                  transition: "transform 240ms ease, color 200ms ease",
-                  fontFamily: "var(--f-mono)", fontSize: 18, textAlign: "right"
-                }}>+</div>
               </div>
             );
           })}
@@ -357,30 +483,34 @@ function Projects() {
   );
 }
 
-/* ============ Experience ============ */
+/* ── Experience ── */
+
 function Experience() {
+  if (!EXPERIENCE || EXPERIENCE.length === 0) return null;
   return (
-    <section id="experience" className="section">
-      <div className="page">
-        <div className="section-head reveal">
-          <div className="section-num">§ 04 · CV</div>
-          <h2 className="section-title">
-            Roles & experience.
-            <span className="cn">经历与岗位。</span>
+    <section id="experience">
+      <DepthMarker depth="610 m" note="Experience beds" />
+      <div className="wrap sec-pad">
+        <div className="sec-head reveal">
+          <span className="sec-num">§ 04</span>
+          <h2 className="sec-title">
+            Curriculum vitae
+            <span className="cn">经历</span>
           </h2>
         </div>
-
-        <div className="exp">
-          {window.EXPERIENCE.map((e, i) => (
-            <div className="exp-row reveal" key={i}>
-              <div className="when">{e.when}</div>
-              <div className="role">
-                {e.role_en}
-                <span className="cn">{e.role_cn}</span>
-              </div>
-              <div className="where">
-                {e.where_en}
-                <span className="cn">{e.where_cn}</span>
+        <div className="reveal">
+          {EXPERIENCE.map((e, i) => (
+            <div className="exp-row" key={i}>
+              <div className="exp-when">{e.when}</div>
+              <div>
+                <div className="exp-role">
+                  {e.role_en}
+                  <span className="cn">{e.role_cn}</span>
+                </div>
+                <div className="exp-where">
+                  {e.where_en}
+                  <span className="cn">{e.where_cn}</span>
+                </div>
               </div>
             </div>
           ))}
@@ -390,28 +520,30 @@ function Experience() {
   );
 }
 
-/* ============ Writing ============ */
+/* ── Writing ── */
+
 function Writing() {
+  if (!WRITING || WRITING.length === 0) return null;
   return (
-    <section id="writing" className="section">
-      <div className="page">
-        <div className="section-head reveal">
-          <div className="section-num">§ 05 · Notes</div>
-          <h2 className="section-title">
-            Field notes & essays.
-            <span className="cn">野外笔记与随笔。</span>
+    <section id="writing">
+      <DepthMarker depth="780 m" note="Writing formation" />
+      <div className="wrap sec-pad">
+        <div className="sec-head reveal">
+          <span className="sec-num">§ 05</span>
+          <h2 className="sec-title">
+            Field notes
+            <span className="cn">文章</span>
           </h2>
         </div>
-
-        <div className="writing">
-          {window.WRITING.map((w, i) => (
-            <a className="write-row reveal" key={i} href={w.url || "#"} target="_blank">
-              <div className="date">{w.date}</div>
-              <div className="title">
+        <div className="reveal">
+          {WRITING.map((w, i) => (
+            <a className="write-row" key={i} href={w.url || "#"}>
+              <span className="write-date">{w.date}</span>
+              <span className="write-title">
                 {w.title_en}
-                {w.subtitle_en && <span className="cn">{w.subtitle_en}</span>}
-              </div>
-              <div className="arrow">→</div>
+                {w.subtitle_en && <span className="write-sub">{w.subtitle_en}</span>}
+              </span>
+              <span className="write-arrow">→</span>
             </a>
           ))}
         </div>
@@ -420,68 +552,74 @@ function Writing() {
   );
 }
 
-/* ============ Contact ============ */
+/* ── Contact ── */
+
 function Contact() {
   return (
-    <section id="contact" className="section">
-      <div className="page">
-        <div className="section-head reveal">
-          <div className="section-num">§ 06 · Get in touch</div>
-          <h2 className="section-title">
-            Contact.
-            <span className="cn">联系。</span>
+    <section id="contact">
+      <DepthMarker depth="470 Ma" note="Basement · Dalradian" />
+      <div className="wrap sec-pad">
+        <div className="sec-head reveal">
+          <span className="sec-num">§ 06</span>
+          <h2 className="sec-title">
+            Make contact
+            <span className="cn">联系</span>
           </h2>
         </div>
 
-        <div className="contact-grid">
-          <div className="reveal">
-            <p className="contact-lead">
-              Geology, code, or anything in between —
-              the links are over there.
-              <span className="cn">
-                地质、代码，或者别的什么——链接就在旁边。
-              </span>
-            </p>
-          </div>
+        <p className="contact-lead reveal">
+          Geology, code, or anything in between —
+          the links are over there.
+          <span className="cn">地质、代码，或者别的什么——链接就在旁边。</span>
+        </p>
 
-          <ul className="links-list reveal">
-            {window.LINKS.map((l) => (
-              <li key={l.name} onClick={() => window.open(l.url, "_blank")}>
-                <span className="lk-name">{l.name}</span>
-                <span className="lk-handle">{l.handle}</span>
-                <span className="lk-arrow">↗</span>
-              </li>
-            ))}
-          </ul>
+        <div className="link-grid reveal">
+          {LINKS.map((l) => (
+            <a className="link-cell" key={l.name} href={l.url} target="_blank" rel="noreferrer">
+              <div className="link-name">{l.name}</div>
+              <div className="link-handle">{l.handle}</div>
+            </a>
+          ))}
         </div>
       </div>
     </section>
   );
 }
 
-/* ============ Footer ============ */
+/* ── Footer: map cartouche ── */
+
 function Footer() {
   return (
-    <footer>
-      <div className="page" style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 16, width: "100%" }}>
-        <div className="colophon">
-          © 2026 Yuan Zhao · 赵元 — Built in Manchester. Set in Fraunces, Inter & JetBrains Mono.
-          Last updated April 2026.
+    <footer className="cartouche">
+      <div className="cartouche-inner">
+        <div className="cell">
+          <div className="k">Sheet</div>
+          <div className="v">{PROFILE.name_en} · {PROFILE.name_cn}<br/>Personal survey, 1st ed.</div>
         </div>
-        <div>↑ <a href="#top" style={{ borderBottom: "1px dotted currentColor" }}>Back to top · 回到顶部</a></div>
+        <div className="cell">
+          <div className="k">Surveyed at</div>
+          <div className="v">53.4668° N, 2.2339° W<br/>{PROFILE.location}</div>
+        </div>
+        <div className="cell">
+          <div className="k">Scale</div>
+          <div className="v">
+            1 : 25 000
+            <span className="scalebar" aria-hidden="true">
+              <i></i><i></i><i></i><i></i>
+            </span>
+          </div>
+        </div>
+        <div className="cell">
+          <div className="k">Compiled</div>
+          <div className="v">Built in Manchester,<br/>with Claude · 2026</div>
+        </div>
       </div>
     </footer>
   );
 }
 
-window.CustomCursor = CustomCursor;
-window.useReveal = useReveal;
-window.Nav = Nav;
-window.Hero = Hero;
-window.About = About;
-window.Skills = Skills;
-window.Projects = Projects;
-window.Experience = Experience;
-window.Writing = Writing;
-window.Contact = Contact;
-window.Footer = Footer;
+/* ── expose ── */
+Object.assign(window, {
+  useReveal, CustomCursor, Nav, Hero, About, Skills,
+  Projects, Experience, Writing, Contact, Footer,
+});
