@@ -1,7 +1,7 @@
 /* ============ App + Tweaks ============ */
 const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "dark": false,
-  "accent": "#a85a2a",
+  "accent": "#b04f24",
   "typeset": "serif",
   "density": "normal",
   "hide_skills": false,
@@ -10,11 +10,11 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
 }/*EDITMODE-END*/;
 
 const ACCENT_PRESETS = [
-  { label: "Ochre · 赭石", value: "#a85a2a" },
-  { label: "Slate · 石青", value: "#3a6a7a" },
+  { label: "Iron oxide · 氧化铁红", value: "#b04f24" },
+  { label: "Map teal · 图青", value: "#38606b" },
   { label: "Moss · 苔绿", value: "#5a7a3a" },
-  { label: "Plum · 紫檀", value: "#7a3a5a" },
-  { label: "Ink · 墨", value: "#1a1814" },
+  { label: "Hematite · 赤铁", value: "#8a3030" },
+  { label: "Ink · 墨", value: "#1d1a14" },
 ];
 
 function App() {
@@ -30,9 +30,7 @@ function App() {
     r.dataset.hideExperience = tweaks.hide_experience;
     r.dataset.hideWriting = tweaks.hide_writing;
     r.style.setProperty("--accent", tweaks.accent);
-    r.style.setProperty("--selection",
-      tweaks.accent + "33"
-    );
+    r.style.setProperty("--selection", tweaks.accent + "33");
   }, [tweaks]);
 
   useReveal();
@@ -41,21 +39,23 @@ function App() {
     <>
       <CustomCursor />
       <Nav tweaks={tweaks} setTweak={setTweak} />
-      <main>
-        <Hero />
-        <About />
-        <Skills />
-        <Projects />
-        <Experience />
-        <Writing />
-        <Contact />
-      </main>
-      <Footer />
+      <div className="shell">
+        <main>
+          <Hero />
+          <About />
+          <Skills />
+          <Projects />
+          <Experience />
+          <Writing />
+          <Contact />
+        </main>
+        <Footer />
+      </div>
 
       <TweaksPanel title="Tweaks">
         <TweakSection label="Theme · 主题">
           <TweakToggle
-            label="Dark mode · 深色模式"
+            label="Night mode · 夜间模式"
             value={tweaks.dark}
             onChange={(v) => setTweak("dark", v)}
           />
@@ -116,13 +116,13 @@ function App() {
         </TweakSection>
 
         <TweakSection label="Sections · 段落显隐">
-          <TweakToggle label="Show Toolkit · 工具与方法"
+          <TweakToggle label="Show Legend · 图例"
             value={!tweaks.hide_skills}
             onChange={(v) => setTweak("hide_skills", !v)} />
           <TweakToggle label="Show CV · 经历"
             value={!tweaks.hide_experience}
             onChange={(v) => setTweak("hide_experience", !v)} />
-          <TweakToggle label="Show Notes · 文章"
+          <TweakToggle label="Show Writing · 文章"
             value={!tweaks.hide_writing}
             onChange={(v) => setTweak("hide_writing", !v)} />
         </TweakSection>
