@@ -29,9 +29,13 @@
     color:var(--ink);
     background-color:var(--paper);
     background-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='560' height='560' viewBox='0 0 560 560'%3E%3Ccircle cx='280' cy='280' r='230' fill='none' stroke='%23b4452f' stroke-width='26' stroke-linecap='round' stroke-dasharray='1280 200' opacity='0.05' transform='rotate(-60 280 280)'/%3E%3C/svg%3E"),
       radial-gradient(circle at 18% 12%, rgba(255,255,255,.5), transparent 45%),
       radial-gradient(circle at 82% 78%, rgba(180,69,47,.04), transparent 40%),
       url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+    background-repeat:no-repeat,no-repeat,no-repeat,repeat;
+    background-position:right -140px bottom -140px,0 0,0 0,0 0;
+    background-attachment:fixed,scroll,scroll,scroll;
     min-height:100vh;
     display:flex;flex-direction:column;
     -webkit-font-smoothing:antialiased;
@@ -58,6 +62,7 @@
   h1{font-family:var(--mincho);font-weight:600;font-size:27px;letter-spacing:2px;line-height:1;}
   .sub{font-size:11px;color:var(--ink-soft);letter-spacing:2px;margin-top:5px;text-transform:uppercase;}
   .meta{margin-left:auto;text-align:right;}
+  .today{font-family:var(--mincho);font-size:11px;color:var(--ink-faint);letter-spacing:2px;margin-bottom:4px;}
   .count{font-family:var(--mincho);font-size:15px;color:var(--ink-soft);}
   .count b{color:var(--shu);font-size:20px;}
   .bar{width:160px;height:5px;background:var(--line-soft);border-radius:3px;margin-top:7px;overflow:hidden;}
@@ -92,23 +97,33 @@
   .col{
     flex:0 0 286px;scroll-snap-align:start;
     background:rgba(255,255,255,.32);
-    border:1px solid var(--line);border-radius:10px;
+    border:1px solid var(--line);border-top:3px solid var(--ink-faint);
+    border-radius:4px 4px 10px 10px;
     display:flex;flex-direction:column;max-height:100%;
   }
-  .col.drag-over{border-color:var(--shu);background:rgba(180,69,47,.05);}
+  .col.drag-over{border-color:var(--shu);border-style:dashed;border-top-style:solid;background:rgba(180,69,47,.05);}
+  .col.c0{border-top-color:#9b988e;}
+  .col.c1{border-top-color:#2f4858;}
+  .col.c2{border-top-color:var(--shu);}
+  .col.c3{border-top-color:#7c8a4e;}
   .col-head{padding:13px 14px 11px;border-bottom:1px solid var(--line-soft);display:flex;align-items:baseline;gap:8px;}
-  .col-kanji{font-family:var(--mincho);font-size:17px;font-weight:600;letter-spacing:1px;}
+  .col-kanji{font-family:var(--mincho);font-size:18px;font-weight:600;letter-spacing:2px;}
   .col-cn{font-size:11px;color:var(--ink-soft);}
   .col-num{margin-left:auto;font-family:var(--mincho);font-size:13px;color:var(--ink-faint);}
+  .col-num small{font-size:10px;margin-left:1px;}
   .col.c0 .col-kanji{color:#6f6f6a;}
   .col.c1 .col-kanji{color:#2f4858;}
   .col.c2 .col-kanji{color:var(--shu);}
   .col.c3 .col-kanji{color:#7c8a4e;}
   .cards{padding:10px;display:flex;flex-direction:column;gap:9px;overflow-y:auto;min-height:60px;}
-  .empty-col{font-size:11px;color:var(--ink-faint);text-align:center;padding:14px 0;font-family:var(--mincho);letter-spacing:1px;}
+  .empty-col{
+    writing-mode:vertical-rl;font-size:13px;color:var(--ink-faint);
+    margin:12px auto;font-family:var(--mincho);letter-spacing:8px;user-select:none;
+  }
 
   /* ---------- card ---------- */
   .card{
+    position:relative;
     background:var(--card);border:1px solid var(--line-soft);
     border-left:3px solid var(--ink-faint);
     border-radius:7px;padding:11px 11px 9px;cursor:grab;
@@ -118,12 +133,26 @@
   @keyframes rise{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
   .card:hover{box-shadow:0 3px 9px rgba(43,42,38,.1);transform:translateY(-1px);}
   .card.dragging{opacity:.4;}
+  .card.done{opacity:.78;}
+  .card.done .card-title{color:var(--ink-soft);}
+  .card.done::after{
+    content:"済";position:absolute;right:9px;bottom:34px;
+    font-family:var(--mincho);font-size:19px;font-weight:600;color:var(--shu);
+    width:36px;height:36px;border:2px solid var(--shu);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    transform:rotate(12deg);opacity:.4;pointer-events:none;
+  }
   .card-top{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
   .tag{font-size:10px;padding:2px 8px;border-radius:11px;color:#fff;letter-spacing:.5px;white-space:nowrap;}
-  .pri{font-family:var(--mincho);font-size:12px;color:var(--shu);font-weight:600;}
+  .pri{
+    font-family:var(--mincho);font-size:11px;color:var(--shu);font-weight:600;
+    width:19px;height:19px;flex:0 0 auto;border:1.5px solid var(--shu);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    transform:rotate(-8deg);
+  }
   .due{margin-left:auto;font-size:10px;color:var(--ink-soft);font-family:var(--mincho);display:flex;align-items:center;gap:3px;}
   .due.soon{color:var(--shu);font-weight:600;}
-  .card-title{font-size:14px;line-height:1.45;word-break:break-word;}
+  .card-title{font-family:var(--mincho);font-weight:500;font-size:14px;line-height:1.5;word-break:break-word;}
   .card-note{font-size:11px;color:var(--ink-soft);margin-top:5px;line-height:1.5;white-space:pre-wrap;word-break:break-word;}
   .card-foot{display:flex;align-items:center;gap:2px;margin-top:9px;padding-top:7px;border-top:1px dashed var(--line-soft);}
   .icon{
@@ -170,6 +199,12 @@
   .subj-item button{border:none;background:transparent;color:var(--ink-faint);cursor:pointer;font-size:15px;}
   .subj-item button:hover{color:var(--shu);}
   .hint{font-size:11px;color:var(--ink-faint);margin-top:8px;line-height:1.5;}
+  /* ---------- electron (mac titlebar) ---------- */
+  body.electron header{padding-top:42px;-webkit-app-region:drag;-webkit-user-select:none;}
+  body.electron header .btn,
+  body.electron header .chip,
+  body.electron header .chips{-webkit-app-region:no-drag;}
+
   footer{padding:10px 20px;border-top:1px solid var(--line);display:flex;align-items:center;gap:10px;font-size:11px;color:var(--ink-faint);}
   footer .save-state{margin-left:auto;font-family:var(--mincho);letter-spacing:1px;}
   ::-webkit-scrollbar{height:8px;width:8px;}
@@ -185,6 +220,7 @@
         <div class="sub">Revision Kanban · for the long term</div>
       </div>
       <div class="meta">
+        <div class="today" id="todayDate"></div>
         <div class="count">修得 <b id="doneN">0</b> <span style="font-size:12px">/ <span id="totalN">0</span></span></div>
         <div class="bar"><i id="barFill"></i></div>
       </div>
@@ -200,7 +236,10 @@
 
   <footer>
     <button class="btn ghost" id="resetBtn" style="font-size:11px;padding:5px 10px;">清空全部</button>
-    <span>拖拽卡片或用 ◀ ▶ 移动 · 数据自动保存</span>
+    <button class="btn ghost" id="exportBtn" style="font-size:11px;padding:5px 10px;">导出</button>
+    <button class="btn ghost" id="importBtn" style="font-size:11px;padding:5px 10px;">导入</button>
+    <input type="file" id="importFile" accept=".json,application/json" style="display:none">
+    <span>拖拽卡片移动或排序 · 数据自动保存</span>
     <span class="save-state" id="saveState">已保存</span>
   </footer>
 
@@ -286,11 +325,21 @@ function askConfirm(msg){
 }
 
 /* ---------- persistence ---------- */
+/* prefer window.storage (sandboxed runtime), fall back to localStorage for local/file use */
+const store = {
+  async get(k){
+    if(window.storage){ const r = await window.storage.get(k); return r && r.value; }
+    return localStorage.getItem(k);
+  },
+  async set(k,v){
+    if(window.storage){ await window.storage.set(k,v); }
+    else{ localStorage.setItem(k,v); }
+  }
+};
 async function load(){
-  if(!window.storage) return false;
   try{
-    const r = await window.storage.get(KEY);
-    if(r && r.value){ state = JSON.parse(r.value); return true; }
+    const v = await store.get(KEY);
+    if(v){ state = JSON.parse(v); return true; }
   }catch(e){ /* no data yet */ }
   return false;
 }
@@ -300,14 +349,12 @@ function save(){
   setSaveState("保存中…");
   clearTimeout(saveTimer);
   saveTimer = setTimeout(async ()=>{
-    if(!window.storage){ setSaveState("仅本次会话"); return; }
-    // some runtimes reject the optional 3rd arg; personal scope is the default
     try{
-      await window.storage.set(KEY, JSON.stringify(state));
+      await store.set(KEY, JSON.stringify(state));
       setSaveState("已保存");
     }catch(e){
-      try{ await window.storage.set(KEY, JSON.stringify(state)); setSaveState("已保存"); }
-      catch(e2){ console.warn("persist failed", e2); setSaveState("未保存·仅本次"); }
+      console.warn("persist failed", e);
+      setSaveState("未保存·仅本次");
     }
   }, 350);
 }
@@ -363,12 +410,12 @@ function renderBoard(){
       <div class="col-head">
         <span class="col-kanji">${col.kanji}</span>
         <span class="col-cn">${col.cn}</span>
-        <span class="col-num">${list.length}</span>
+        <span class="col-num">${list.length}<small>枚</small></span>
       </div>
       <div class="cards"></div>`;
     const cardsBox = colEl.querySelector(".cards");
     if(list.length===0){
-      const e=document.createElement("div"); e.className="empty-col"; e.textContent="—"; cardsBox.appendChild(e);
+      const e=document.createElement("div"); e.className="empty-col"; e.textContent="空"; cardsBox.appendChild(e);
     }
     list.forEach(card=> cardsBox.appendChild(cardEl(card, ci)));
 
@@ -378,17 +425,37 @@ function renderBoard(){
     colEl.addEventListener("drop", e=>{
       e.preventDefault(); colEl.classList.remove("drag-over");
       const id = e.dataTransfer.getData("id");
-      const c = state.cards.find(x=>x.id===id);
-      if(c && c.col!==col.id){ c.col=col.id; save(); render(); }
+      dropCard(id, col.id, cardAfterY(cardsBox, e.clientY));
     });
     board.appendChild(colEl);
   });
 }
 
+/* the card element directly below the cursor, for insert-before positioning */
+function cardAfterY(cardsBox, y){
+  const cards = [...cardsBox.querySelectorAll(".card:not(.dragging)")];
+  return cards.find(el=>{
+    const r = el.getBoundingClientRect();
+    return y < r.top + r.height/2;
+  }) || null;
+}
+
+function dropCard(id, colId, afterEl){
+  const c = state.cards.find(x=>x.id===id);
+  if(!c) return;
+  c.col = colId;
+  state.cards.splice(state.cards.indexOf(c), 1);
+  const tgt = afterEl && state.cards.find(x=>x.id===afterEl.dataset.id);
+  if(tgt){ state.cards.splice(state.cards.indexOf(tgt), 0, c); }
+  else{ state.cards.push(c); }
+  save(); render();
+}
+
 function cardEl(card, ci){
   const s = subjById(card.subj);
   const el = document.createElement("div");
-  el.className="card";
+  el.className="card"+(card.col==="c3"?" done":"");
+  el.dataset.id = card.id;
   el.style.borderLeftColor = s ? s.color : "var(--ink-faint)";
   el.draggable = true;
 
@@ -397,7 +464,7 @@ function cardEl(card, ci){
   if(d!==null){
     const soon = d<=3;
     const label = d<0 ? `已逾期 ${-d}d` : d===0 ? "今天" : `剩 ${d}d`;
-    dueHtml = `<span class="due${soon?' soon':''}">試 ${label}</span>`;
+    dueHtml = `<span class="due${soon?' soon':''}">〆 ${label}</span>`;
   }
   el.innerHTML = `
     <div class="card-top">
@@ -513,12 +580,52 @@ $("#newSubjName").addEventListener("keydown", e=>{ if(e.key==="Enter") addSubj()
 $("#resetBtn").onclick = async ()=>{
   if(await askConfirm("清空所有科目和卡片？此操作无法撤销。")){ state={subjects:[],cards:[]}; filter="all"; save(); render(); }
 };
+$("#exportBtn").onclick = ()=>{
+  const blob = new Blob([JSON.stringify(state, null, 2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "revision-kanban-" + new Date().toISOString().slice(0,10) + ".json";
+  a.click();
+  URL.revokeObjectURL(a.href);
+};
+$("#importBtn").onclick = ()=> $("#importFile").click();
+$("#importFile").addEventListener("change", async e=>{
+  const file = e.target.files[0];
+  e.target.value = "";
+  if(!file) return;
+  try{
+    const data = JSON.parse(await file.text());
+    if(!Array.isArray(data.subjects) || !Array.isArray(data.cards)) throw new Error("bad shape");
+    if(await askConfirm("导入将覆盖当前所有数据，确定？")){
+      state = { subjects:data.subjects, cards:data.cards };
+      filter = "all";
+      save(); render();
+    }
+  }catch(err){
+    await askConfirm("文件格式不正确，无法导入。");
+  }
+});
 [ "#cardOverlay","#subjOverlay" ].forEach(id=>{
   $(id).addEventListener("click", e=>{ if(e.target===$(id)) $(id).classList.remove("show"); });
 });
+document.addEventListener("keydown", e=>{
+  if(e.key!=="Escape") return;
+  const confirm = $("#confirmOverlay");
+  if(confirm.classList.contains("show")){ $("#confirmNo").click(); return; }
+  document.querySelectorAll(".overlay.show").forEach(ov=> ov.classList.remove("show"));
+});
 
 /* ---------- boot ---------- */
+function kanjiDate(){
+  const k = "〇一二三四五六七八九";
+  const d = new Date();
+  const year = String(d.getFullYear()).split("").map(c=>k[+c]).join("");
+  const kd = n => n<10 ? k[n] : (n<20 ? "十"+(n%10?k[n%10]:"") : k[Math.floor(n/10)]+"十"+(n%10?k[n%10]:""));
+  return `${year}年${kd(d.getMonth()+1)}月${kd(d.getDate())}日`;
+}
 (async ()=>{
+  if(navigator.userAgent.includes("Electron")) document.body.classList.add("electron");
+  $("#todayDate").textContent = kanjiDate();
   await load();
   render();
 })();
