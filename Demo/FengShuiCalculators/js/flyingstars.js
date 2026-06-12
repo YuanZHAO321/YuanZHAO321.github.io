@@ -95,7 +95,7 @@ const FlyingStars = (function () {
       };
     });
 
-    return {
+    const result = {
       period, facing, sitDir,
       waterDir, mtnDir,
       palaces,
@@ -103,6 +103,8 @@ const FlyingStars = (function () {
       type: chartType(base, mountain, water, facing.dir, sitDir, period),
       annualYear: annualYear || 0,
     };
+    result.analysis = analyze(result);
+    return result;
   }
 
   /* Annual star center number for a given (solar/立春) year.
@@ -122,6 +124,37 @@ const FlyingStars = (function () {
     return CM.MOUNTAINS[oppIdx].code;
   }
 
+  /* ---- Palace-by-palace analysis: classic combos + star timeliness ---- */
+  function timeliness(star, period) {
+    if (star === period) return { t: "旺", w: 1.5 };                 // 当令
+    if (star === (period % 9) + 1) return { t: "生", w: 1 };         // 生气 (next)
+    if (star === ((period + 7) % 9) + 1) return { t: "退", w: -0.5 };// 退气 (previous)
+    return { t: "", w: 0 };
+  }
+  const STAR_BASE = { 1: 0.5, 2: -1.5, 3: -1, 4: 0.5, 5: -2, 6: 0.5, 7: -1, 8: 1, 9: 1 };
+
+  function analyze(r) {
+    const out = [];
+    ["NW", "N", "NE", "W", "C", "E", "SW", "S", "SE"].forEach(d => {
+      const p = r.palaces[d];
+      const key = Math.min(p.mountain, p.water) + "-" + Math.max(p.mountain, p.water);
+      const combo = CM.FS_COMBOS[key];
+      const tm = timeliness(p.mountain, r.period);
+      const tw = timeliness(p.water, r.period);
+      let score = (STAR_BASE[p.mountain] + tm.w) + (STAR_BASE[p.water] + tw.w);
+      if (combo) score += combo.score;
+      const rating = score >= 1.5 ? "吉" : score <= -1.5 ? "凶" : "平";
+      const text = combo
+        ? `${combo.cn} — ${combo.en}`
+        : `山星${p.mountain}${tm.t}(${CM.FS_STAR_TAG[p.mountain]}) · 向星${p.water}${tw.t}(${CM.FS_STAR_TAG[p.water]})`;
+      out.push({
+        dir: d, rating, text,
+        isFacing: d === r.facing.dir, isSitting: d === r.sitDir,
+      });
+    });
+    return out;
+  }
+
   /* Determine special chart type (旺山旺向 etc.) by comparing facing/sitting
    * palace stars to the period number. */
   function chartType(base, mountain, water, facingDir, sitDir, period) {
@@ -134,7 +167,7 @@ const FlyingStars = (function () {
     return "—";
   }
 
-  return { compute, annualCenter, parseMountain };
+  return { compute, annualCenter, parseMountain, analyze };
 })();
 
 if (typeof module !== "undefined") module.exports = FlyingStars;

@@ -41,18 +41,18 @@
 </header>
 
 <nav class="tabs-bar">
-  <div class="wrap tabs">
-    <button class="tab active" data-tab="bazi"><span class="cn">八字</span><span class="lt">Ba Zi</span></button>
-    <button class="tab" data-tab="flyingstars"><span class="cn">玄空飞星</span><span class="lt">Flying Stars</span></button>
-    <button class="tab" data-tab="tongshu"><span class="cn">通书</span><span class="lt">Tong Shu</span></button>
-    <button class="tab" data-tab="qimen"><span class="cn">奇门遁甲</span><span class="lt">Qi Men Dun Jia</span></button>
+  <div class="wrap tabs" role="tablist" aria-label="Calculators">
+    <button class="tab active" data-tab="bazi" role="tab" aria-selected="true" aria-controls="bazi"><span class="cn">八字</span><span class="lt">Ba Zi</span></button>
+    <button class="tab" data-tab="flyingstars" role="tab" aria-selected="false" aria-controls="flyingstars" tabindex="-1"><span class="cn">玄空飞星</span><span class="lt">Flying Stars</span></button>
+    <button class="tab" data-tab="tongshu" role="tab" aria-selected="false" aria-controls="tongshu" tabindex="-1"><span class="cn">通书</span><span class="lt">Tong Shu</span></button>
+    <button class="tab" data-tab="qimen" role="tab" aria-selected="false" aria-controls="qimen" tabindex="-1"><span class="cn">奇门遁甲</span><span class="lt">Qi Men Dun Jia</span></button>
   </div>
 </nav>
 
 <main class="wrap">
 
   <!-- ============================ BA ZI ============================ -->
-  <section id="bazi" class="panel active">
+  <section id="bazi" class="panel active" role="tabpanel" aria-label="Ba Zi">
     <div class="panel-head">
       <h2><span class="cn">八字四柱</span> Ba Zi · Four Pillars of Destiny</h2>
       <p class="lead">Enter a birth moment to derive the Four Pillars (Year, Month, Day, Hour), the Ten Gods, hidden stems, Na Yin, the five-element balance and the decade Luck Pillars (大运).</p>
@@ -73,7 +73,7 @@
   </section>
 
   <!-- ======================== FLYING STARS ======================== -->
-  <section id="flyingstars" class="panel">
+  <section id="flyingstars" class="panel" role="tabpanel" aria-label="Flying Stars">
     <div class="panel-head">
       <h2><span class="cn">玄空飞星</span> Xuan Kong Flying Stars</h2>
       <p class="lead">Plot the nine-palace flying-star chart of a building from its construction Period and facing direction, with Mountain (山), Water (向) and annual stars.</p>
@@ -88,7 +88,7 @@
   </section>
 
   <!-- =========================== TONG SHU ========================= -->
-  <section id="tongshu" class="panel">
+  <section id="tongshu" class="panel" role="tabpanel" aria-label="Tong Shu">
     <div class="panel-head">
       <h2><span class="cn">通书</span> Tong Shu · Chinese Almanac</h2>
       <p class="lead">Read a day's almanac: the 12 Officers, 28 Constellations, Yellow &amp; Black day-god, Na Yin, solar term, moon phase and the zodiac horoscope.</p>
@@ -98,12 +98,13 @@
       <div class="field"><label>Time</label><input type="time" id="ts-time" value="12:00"></div>
       <div class="field"><label>Timezone (UTC offset)</label><input type="number" id="ts-tz" value="8" step="0.5"></div>
       <button type="submit">Calculate 查日</button>
+      <button type="button" class="now-btn" data-now="ts">Now 现在</button>
     </form>
     <div id="tongshu-result" class="result"></div>
   </section>
 
   <!-- ========================= QI MEN DUN JIA ====================== -->
-  <section id="qimen" class="panel">
+  <section id="qimen" class="panel" role="tabpanel" aria-label="Qi Men Dun Jia">
     <div class="panel-head">
       <h2><span class="cn">奇门遁甲</span> Qi Men Dun Jia <small>时家转盘 · hourly transpan</small></h2>
       <p class="lead">Cast the nine-palace Qi Men chart for a moment: the 局 number, the Three Marvels &amp; Six Standards, the Nine Stars, Eight Doors and Eight Gods.</p>
@@ -113,6 +114,7 @@
       <div class="field"><label>Time</label><input type="time" id="qm-time" value="12:00"></div>
       <div class="field"><label>Timezone (UTC offset)</label><input type="number" id="qm-tz" value="8" step="0.5"></div>
       <button type="submit">Calculate 起局</button>
+      <button type="button" class="now-btn" data-now="qm">Now 现在</button>
     </form>
     <div id="qimen-result" class="result"></div>
   </section>
@@ -132,6 +134,8 @@
 <script src="js/flyingstars.js"></script>
 <script src="js/tongshu.js"></script>
 <script src="js/qimen.js"></script>
+<script src="js/ai-context.js"></script>
+<script src="js/ai.js"></script>
 <script src="js/app.js"></script>
 <script>
 /* draw the 8 spokes + 8 trigram lines on the header bagua */

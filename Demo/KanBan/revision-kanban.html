@@ -624,7 +624,8 @@ function kanjiDate(){
   return `${year}年${kd(d.getMonth()+1)}月${kd(d.getDate())}日`;
 }
 (async ()=>{
-  if(navigator.userAgent.includes("Electron")) document.body.classList.add("electron");
+  /* mac-only: pad the header for traffic lights; Windows keeps its native titlebar */
+  if(navigator.userAgent.includes("Electron") && navigator.platform.startsWith("Mac")) document.body.classList.add("electron");
   $("#todayDate").textContent = kanjiDate();
   await load();
   render();

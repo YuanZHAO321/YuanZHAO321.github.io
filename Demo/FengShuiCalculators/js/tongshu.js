@@ -65,28 +65,52 @@ const TongShu = (function () {
 
     const monthBranch = chart.month.branch;
     const dayBranch = chart.day.branch;
-
-    // Na Yin of day pillar
-    function jiaziOf(p) { for (let n = 0; n < 60; n++) if (n % 10 === p.stem && n % 12 === p.branch) return n; return 0; }
-    const dayJiazi = jiaziOf(chart.day);
+    const dayJiazi = chart.day.jiazi;
 
     // moon
     const moon = Astro.moonInfo(jd, dt.year, dt.month);
-    const lunarDayNo = Astro.lunarDay(jd, dt.year, dt.month);
+    const lunarDayNo = Astro.lunarDay(jd, dt.year, dt.month, tz);
     const wzIdx = Math.floor(Astro.norm360(moon.ecLon) / 30);
+
+    // solar-term exact instants (current term began / next term)
+    const ti = Astro.termInstants(jd, dt.year, dt.month);
 
     // day of week — JDN % 7: 0=Monday ... 5=Saturday, 6=Sunday
     const dow = (jdn % 7 + 7) % 7;
     const DOW = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
+    // 冲煞: clash branch = day branch + 6; Sha direction from the day triad
+    const clashBranch = (dayBranch + 6) % 12;
+    const off = officer(dayBranch, monthBranch);
+    const man = mansion(jdn);
+    const god = dayGod(dayBranch, monthBranch);
+
+    // day-quality rating: officer score + mansion luck + yellow/black belt
+    const ratingScore = CM.OFFICER_SCORE[off.no - 1] + (man.lucky ? 1 : -1) + (god.lucky ? 2 : -2);
+    const rating =
+      ratingScore >= 3 ? { score: ratingScore, cn: "大吉", en: "Excellent", stars: 5 } :
+      ratingScore >= 1 ? { score: ratingScore, cn: "吉", en: "Good", stars: 4 } :
+      ratingScore >= -1 ? { score: ratingScore, cn: "平", en: "Fair", stars: 3 } :
+      ratingScore >= -3 ? { score: ratingScore, cn: "凶", en: "Poor", stars: 2 } :
+                          { score: ratingScore, cn: "大凶", en: "Very poor", stars: 1 };
+
     return {
       chart,
       date: { y: dt.year, m: dt.month, d: dt.day, dow: DOW[dow] },
-      officer: officer(dayBranch, monthBranch),
-      mansion: mansion(jdn),
-      dayGod: dayGod(dayBranch, monthBranch),
+      officer: off,
+      rating: rating,
+      yiji: CM.OFFICER_YIJI[off.no - 1],
+      clash: { branch: clashBranch, zodiac: CM.ZODIAC[clashBranch], cn: CM.BRANCHES_CN[clashBranch], sha: CM.SHA_DIR[dayBranch] },
+      mansion: man,
+      dayGod: god,
       nayin: Astro.naYin(dayJiazi),
-      solarTerm: { no: chart.solarTermNo, cn: CM.SOLAR_TERMS[chart.solarTermNo - 1][0], en: CM.SOLAR_TERMS[chart.solarTermNo - 1][1] },
+      kong: Astro.xunKong(dayJiazi),
+      solarTerm: {
+        no: chart.solarTermNo, cn: CM.SOLAR_TERMS[chart.solarTermNo - 1][0], en: CM.SOLAR_TERMS[chart.solarTermNo - 1][1],
+        began: Astro.jdToCivil(ti.curJD, tz),
+        nextNo: ti.nextNo, nextCn: CM.SOLAR_TERMS[ti.nextNo - 1][0], nextEn: CM.SOLAR_TERMS[ti.nextNo - 1][1],
+        nextAt: Astro.jdToCivil(ti.nextJD, tz),
+      },
       moon: {
         lunarDay: lunarDayNo,
         lunarDayCn: CM.LUNAR_DAY_CN[lunarDayNo],

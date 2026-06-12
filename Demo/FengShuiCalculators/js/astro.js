@@ -46,12 +46,33 @@ const Astro = (function () {
   /* ΔT (TT - UT) in seconds — polynomial approximation (Espenak/Meeus). */
   function deltaT(year, month) {
     const y = year + (month - 0.5) / 12;
-    let t, dt;
-    if (y < 1986) { t = (y - 1900) / 100; dt = -2.79 + 149.4119 * t - 598.939 * t * t + 6196.6 * Math.pow(t, 3) - 19700 * Math.pow(t, 4); if (y >= 1920) { t = y - 1920; dt = 21.20 + 0.84493 * t - 0.076100 * t * t + 0.0020936 * Math.pow(t, 3); } }
-    else if (y < 2005) { t = y - 2000; dt = 63.86 + 0.3345 * t - 0.060374 * t * t + 0.0017275 * Math.pow(t, 3) + 0.000651814 * Math.pow(t, 4) + 0.00002373599 * Math.pow(t, 5); }
-    else if (y < 2050) { t = y - 2000; dt = 62.92 + 0.32217 * t + 0.005589 * t * t; }
-    else { t = (y - 1820) / 100; dt = -20 + 32 * t * t; }
-    return dt;
+    let t;
+    if (y < 1920) { t = (y - 1900) / 100; return -2.79 + 149.4119 * t - 598.939 * t * t + 6196.6 * Math.pow(t, 3) - 19700 * Math.pow(t, 4); }
+    if (y < 1986) { t = y - 1920; return 21.20 + 0.84493 * t - 0.076100 * t * t + 0.0020936 * Math.pow(t, 3); }
+    if (y < 2005) { t = y - 2000; return 63.86 + 0.3345 * t - 0.060374 * t * t + 0.0017275 * Math.pow(t, 3) + 0.000651814 * Math.pow(t, 4) + 0.00002373599 * Math.pow(t, 5); }
+    if (y < 2050) { t = y - 2000; return 62.92 + 0.32217 * t + 0.005589 * t * t; }
+    t = (y - 1820) / 100; return -20 + 32 * t * t;
+  }
+
+  /* Inverse of toJD: civil {year,month,day,hour,minute} at given tz offset. */
+  function jdToCivil(jd, tzOffset) {
+    const tz = tzOffset == null ? 8 : tzOffset;
+    const z = jd + 0.5 + tz / 24;
+    let Z = Math.floor(z);
+    let F = z - Z;
+    // round to nearest minute (avoids :59:60 artifacts in display)
+    let totalMin = Math.round(F * 1440);
+    if (totalMin >= 1440) { totalMin -= 1440; Z += 1; }
+    let A = Z;
+    if (Z >= 2299161) { const al = Math.floor((Z - 1867216.25) / 36524.25); A = Z + 1 + al - Math.floor(al / 4); }
+    const B = A + 1524;
+    const C = Math.floor((B - 122.1) / 365.25);
+    const D = Math.floor(365.25 * C);
+    const E = Math.floor((B - D) / 30.6001);
+    const day = B - D - Math.floor(30.6001 * E);
+    const month = E < 14 ? E - 1 : E - 13;
+    const year = month > 2 ? C - 4716 : C - 4715;
+    return { year, month, day, hour: Math.floor(totalMin / 60), minute: totalMin % 60 };
   }
 
   /* Apparent geocentric solar longitude (deg) for a given JD (UT).
@@ -71,31 +92,47 @@ const Astro = (function () {
     return norm360(lambda);
   }
 
-  /* Lunar apparent longitude (deg) — Meeus low precision (~0.3°). */
+  /* Lunar apparent longitude — Meeus ch. 47 truncated series (~0.003°).
+   * Terms: [coeff (1e-6 deg), D, M, Mp, F]; terms in M scale by E (eccentricity). */
+  const LUNAR_TERMS = [
+    [6288774, 0, 0, 1, 0], [1274027, 2, 0, -1, 0], [658314, 2, 0, 0, 0],
+    [213618, 0, 0, 2, 0], [-185116, 0, 1, 0, 0], [-114332, 0, 0, 0, 2],
+    [58793, 2, 0, -2, 0], [57066, 2, -1, -1, 0], [53322, 2, 0, 1, 0],
+    [45758, 2, -1, 0, 0], [-40923, 0, 1, -1, 0], [-34720, 1, 0, 0, 0],
+    [-30383, 0, 1, 1, 0], [15327, 2, 0, 0, -2], [-12528, 0, 0, 1, 2],
+    [10980, 0, 0, 1, -2], [10675, 4, 0, -1, 0], [10034, 0, 0, 3, 0],
+    [8548, 4, 0, -2, 0], [-7888, 2, 1, -1, 0], [-6766, 2, 1, 0, 0],
+    [-5163, 1, 0, -1, 0], [4987, 1, 1, 0, 0], [4036, 2, -1, 1, 0],
+    [3994, 2, 0, 2, 0], [3861, 4, 0, 0, 0], [3665, 2, 0, -3, 0],
+    [-2689, 0, 1, -2, 0], [-2602, 2, 0, -1, 2], [2390, 2, -1, -2, 0],
+    [-2348, 1, 0, 1, 0], [2236, 2, -2, 0, 0], [-2120, 0, 1, 2, 0],
+    [-2069, 0, 2, 0, 0], [2048, 2, -2, -1, 0], [-1773, 2, 0, 1, -2],
+    [-1595, 2, 0, 0, 2], [1215, 4, -1, -1, 0], [-1110, 0, 0, 2, 2],
+  ];
   function moonLongitude(jd, year, month) {
     const jde = jd + deltaT(year || 2000, month || 1) / 86400;
     const T = (jde - 2451545.0) / 36525.0;
-    const Lp = 218.3164477 + 481267.88123421 * T;            // mean longitude
-    const D  = 297.8501921 + 445267.1114034 * T;             // elongation
-    const M  = 357.5291092 + 35999.0502909 * T;              // sun anomaly
-    const Mp = 134.9633964 + 477198.8675055 * T;             // moon anomaly
-    const F  = 93.2720950 + 483202.0175233 * T;              // arg of latitude
-    const Dr = D * D2R, Mr = M * D2R, Mpr = Mp * D2R, Fr = F * D2R;
-    let lon = Lp;
-    lon += 6.288774 * Math.sin(Mpr);
-    lon += 1.274027 * Math.sin(2 * Dr - Mpr);
-    lon += 0.658314 * Math.sin(2 * Dr);
-    lon += 0.213618 * Math.sin(2 * Mpr);
-    lon += -0.185116 * Math.sin(Mr);
-    lon += -0.114332 * Math.sin(2 * Fr);
-    lon += 0.058793 * Math.sin(2 * Dr - 2 * Mpr);
-    lon += 0.057066 * Math.sin(2 * Dr - Mr - Mpr);
-    lon += 0.053322 * Math.sin(2 * Dr + Mpr);
-    lon += 0.045758 * Math.sin(2 * Dr - Mr);
-    lon += -0.040923 * Math.sin(Mr - Mpr);
-    lon += -0.034720 * Math.sin(Dr);
-    lon += -0.030383 * Math.sin(Mr + Mpr);
-    return norm360(lon);
+    const Lp = 218.3164477 + 481267.88123421 * T - 0.0015786 * T * T + T * T * T / 538841;
+    const D  = 297.8501921 + 445267.1114034 * T - 0.0018819 * T * T + T * T * T / 545868;
+    const M  = 357.5291092 + 35999.0502909 * T - 0.0001536 * T * T;
+    const Mp = 134.9633964 + 477198.8675055 * T + 0.0087414 * T * T + T * T * T / 69699;
+    const F  = 93.2720950 + 483202.0175233 * T - 0.0036539 * T * T;
+    const E  = 1 - 0.002516 * T - 0.0000074 * T * T;
+    let sum = 0;
+    for (let i = 0; i < LUNAR_TERMS.length; i++) {
+      const t = LUNAR_TERMS[i];
+      let c = t[0];
+      const am = Math.abs(t[2]);
+      if (am === 1) c *= E; else if (am === 2) c *= E * E;
+      sum += c * Math.sin((t[1] * D + t[2] * M + t[3] * Mp + t[4] * F) * D2R);
+    }
+    // Venus / Jupiter perturbations + flattening term
+    const A1 = 119.75 + 131.849 * T;
+    const A2 = 53.09 + 479264.290 * T;
+    sum += 3958 * Math.sin(A1 * D2R) + 1962 * Math.sin((Lp - F) * D2R) + 318 * Math.sin(A2 * D2R);
+    // nutation in longitude (same Ω as in sunLongitude)
+    const Omega = 125.04452 - 1934.136261 * T;
+    return norm360(Lp + sum / 1e6 - 0.00478 * Math.sin(Omega * D2R));
   }
 
   /* Sun-Moon elongation → phase fraction & illumination.
@@ -118,11 +155,30 @@ const Astro = (function () {
     };
   }
 
-  /* Lunar day number 1..30 (新月=初一). Approx by age. */
-  function lunarDay(jd, year, month) {
-    const info = moonInfo(jd, year, month);
-    let d = Math.floor(info.age) + 1;
+  /* JD (UT) of the new moon at or before the given JD — Newton iteration on
+   * the Sun-Moon elongation (mean rate ≈ 12.19°/day). Converges to seconds. */
+  function prevNewMoonJD(jd, year, month) {
+    const RATE = 12.190749;
+    const wrappedElong = j => {
+      const e = norm360(moonLongitude(j, year, month) - sunLongitude(j, year, month));
+      return ((e + 180) % 360 + 360) % 360 - 180;   // [-180, 180)
+    };
+    const e0 = norm360(moonLongitude(jd, year, month) - sunLongitude(jd, year, month));
+    let t = jd - e0 / RATE;
+    for (let i = 0; i < 6; i++) t -= wrappedElong(t) / RATE;
+    if (t > jd + 1e-9) t -= 29.530588853;
+    return t;
+  }
+
+  /* Lunar day number 1..30 (新月=初一): civil days (at the given tz) elapsed
+   * since the instant of the most recent new moon. */
+  function lunarDay(jd, year, month, tzOffset) {
+    const tz = tzOffset == null ? 8 : tzOffset;
+    const nm = prevNewMoonJD(jd, year, month);
+    const civilDay = j => Math.floor(j + tz / 24 + 0.5);
+    let d = civilDay(jd) - civilDay(nm) + 1;
     if (d > 30) d = 30;
+    if (d < 1) d = 1;
     return d;
   }
 
@@ -159,14 +215,37 @@ const Astro = (function () {
     return (lo + hi) / 2;
   }
 
+  /* Exact instants of the solar term in effect at jd and of the next term.
+   * Returns {termNo, curJD, nextNo, nextJD} (JDs in UT). */
+  function termInstants(jd, year, month) {
+    const lambda = sunLongitude(jd, year, month);
+    const termNo = solarTermNumber(lambda);
+    const curLon = norm360(315 + (termNo - 1) * 15);
+    const elapsed = norm360(lambda - curLon);              // deg since term began
+    const curJD = solarTermJD(curLon, jd - elapsed / 0.9856, year, month);
+    const nextJD = solarTermJD(norm360(curLon + 15), curJD + 15.2, year, month);
+    return { termNo, curJD, nextNo: termNo % 24 + 1, nextJD };
+  }
+
   /* ----------------------  GanZhi (干支) pillars  ---------------------- */
+
+  /* Jiazi index 0..59 from a stem/branch pair (CRT closed form). */
+  function jiaziIndex(stem, branch) {
+    return ((6 * stem - 5 * branch) % 60 + 60) % 60;
+  }
+
+  /* 旬空 (Void/Empty) branches of the 旬 containing a jiazi: the two branches
+   * left uncovered by its ten days. E.g. 甲子旬 → 戌亥. */
+  function xunKong(jiazi) {
+    const b0 = (jiazi - (jiazi % 10)) % 12;
+    return [(b0 + 10) % 12, (b0 + 11) % 12];
+  }
 
   /* Year pillar — uses solar (立春) year boundary. Returns {stem,branch,year} */
   function yearPillar(year, month, day, lambda) {
     let by = year;
-    if (month < 2) by = year - 1;
-    else if (month === 2) { if (lambda < 315 && lambda > 280) by = year - 1; }
-    // for month>=3 stays = year (always after 立春, before next 立春)
+    // before 立春 (λ=315): only possible in Jan/early Feb, where λ ∈ [270,315)
+    if (month <= 2 && lambda >= 270 && lambda < 315) by = year - 1;
     const idx = ((by - 4) % 60 + 60) % 60;
     return { stem: idx % 10, branch: idx % 12, year: by };
   }
@@ -224,10 +303,11 @@ const Astro = (function () {
   }
 
   return {
-    toJD, toJDN, deltaT, sunLongitude, moonLongitude, moonInfo, lunarDay,
-    solarTermNumber, monthBranchFromLongitude, solarTermJD,
+    toJD, toJDN, jdToCivil, deltaT, sunLongitude, moonLongitude, moonInfo,
+    lunarDay, prevNewMoonJD,
+    solarTermNumber, monthBranchFromLongitude, solarTermJD, termInstants,
     yearPillar, monthPillar, dayPillar, hourPillar, naYin, fourPillars,
-    norm360,
+    jiaziIndex, xunKong, norm360,
   };
 })();
 

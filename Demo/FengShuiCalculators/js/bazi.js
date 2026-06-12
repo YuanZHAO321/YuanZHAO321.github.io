@@ -57,6 +57,12 @@ const BaZi = (function () {
     const startAgeFloat = days / 3;                  // 3 days = 1 year
     const startAge = Math.round(startAgeFloat * 10) / 10;
 
+    // 3 days = 1 year → 1 day = 4 months; express remainder in months
+    const startYears = Math.floor(days / 3);
+    const startMonths = Math.round((days - startYears * 3) * 4);
+    const termNo = ((((targetLon - 315) % 360) + 360) % 360) / 15 + 1;
+    const termCivil = Astro.jdToCivil(termJD, tz);
+
     // generate 10 luck pillars from month pillar
     const list = [];
     let s = chart.month.stem, b = chart.month.branch;
@@ -70,7 +76,81 @@ const BaZi = (function () {
         god: tenGod(chart.day.stem, s),
       });
     }
-    return { forward, startAge, list };
+    return {
+      forward, startAge, startYears, startMonths, list,
+      term: { no: termNo, cn: CM.SOLAR_TERMS[termNo - 1][0], en: CM.SOLAR_TERMS[termNo - 1][1], civil: termCivil },
+    };
+  }
+
+  /* Day-master seasonal standing (得令) from the month branch's main element. */
+  function seasonStanding(dmEl, monthBranch) {
+    const mEl = CM.STEM_ELEMENT[CM.HIDDEN_STEMS[monthBranch][0]];
+    const generates = (a, b) => (a + 1) % 5 === b;
+    if (mEl === dmEl) return { key: "旺", cn: "得令而旺", en: "in season — strong" };
+    if (generates(mEl, dmEl)) return { key: "相", cn: "得生而相", en: "supported by the season — fairly strong" };
+    if (generates(dmEl, mEl)) return { key: "休", cn: "泄气而休", en: "drained by the season — resting" };
+    if ((dmEl + 2) % 5 === mEl) return { key: "囚", cn: "耗气而囚", en: "exhausted by the season — trapped" };
+    return { key: "死", cn: "受克而死", en: "controlled by the season — weak" };
+  }
+
+  /* ---- 命局分析: weighted strength, 喜用神, ten-god distribution ---- */
+  function analyze(chart, standing) {
+    const dm = chart.day.stem;
+    const dmEl = CM.STEM_ELEMENT[dm];
+    const pillars = [
+      { p: chart.year, w: 1 }, { p: chart.month, w: 1 },
+      { p: chart.day, w: 1 }, { p: chart.hour, w: 1 },
+    ].filter(x => x.p);
+
+    // weighted element scores: visible stem 1.0; hidden 1.0/0.5/0.3;
+    // the month branch (月令) counts ×1.8
+    const score = [0, 0, 0, 0, 0];
+    const HW = [1, 0.5, 0.3];
+    pillars.forEach((x, i) => {
+      const isDayStem = x.p === chart.day;
+      if (!isDayStem) score[CM.STEM_ELEMENT[x.p.stem]] += 1; // DM itself isn't its own support
+      const mult = x.p === chart.month ? 1.8 : 1;
+      CM.HIDDEN_STEMS[x.p.branch].forEach((h, j) => {
+        score[CM.STEM_ELEMENT[h]] += HW[j] * mult;
+      });
+    });
+
+    // support = 同我(比劫) + 生我(印); the rest drains or attacks
+    const resourceEl = (dmEl + 4) % 5;          // 生我
+    const total = score.reduce((a, b) => a + b, 0);
+    const support = score[dmEl] + score[resourceEl];
+    const pct = total ? Math.round((support / total) * 100) : 50;
+
+    let verdict, favorable;
+    if (pct >= 55) {
+      verdict = { key: "身强", en: "Strong Day Master" };
+      favorable = [(dmEl + 1) % 5, (dmEl + 2) % 5, (dmEl + 3) % 5];   // 食伤·财·官杀
+    } else if (pct <= 40) {
+      verdict = { key: "身弱", en: "Weak Day Master" };
+      favorable = [resourceEl, dmEl];                                  // 印·比劫
+    } else {
+      verdict = { key: "中和", en: "Balanced" };
+      favorable = [resourceEl, dmEl];
+    }
+
+    // ten-god distribution over visible stems + main hidden stems
+    const godCount = {};
+    pillars.forEach(x => {
+      if (x.p !== chart.day) {
+        const g = tenGod(dm, x.p.stem);
+        godCount[g] = (godCount[g] || 0) + 1;
+      }
+      const main = CM.HIDDEN_STEMS[x.p.branch][0];
+      const g2 = tenGod(dm, main);
+      if (g2) godCount[g2] = (godCount[g2] || 0) + 1;
+    });
+    let dominant = null;
+    Object.keys(godCount).forEach(k => { if (!dominant || godCount[k] > godCount[dominant]) dominant = k; });
+
+    return {
+      score, pct, verdict, favorable, dominant, godCount,
+      persona: CM.DM_PERSONA[dm],
+    };
   }
 
   /* Element distribution (count weighted: stems 1, branch main hidden 1). */
@@ -88,26 +168,21 @@ const BaZi = (function () {
   function compute(dt) {
     const chart = Astro.fourPillars(dt);
     const dm = chart.day.stem;
+    const dayKong = Astro.xunKong(chart.day.jiazi);   // 旬空 judged from day pillar
 
     function pillarData(p, isDay) {
       if (!p) return null;
       const hidden = CM.HIDDEN_STEMS[p.branch].map(h => ({
         stem: h, god: tenGod(dm, h),
       }));
-      const jiazi = ((p.stem - p.branch) % 10 + 10) % 10; // not used directly
       return {
         stem: p.stem, branch: p.branch,
         stemGod: isDay ? "日主" : tenGod(dm, p.stem),
         hidden: hidden,
-        nayin: Astro.naYin(((p.stem) + 0)),  // placeholder; replaced below
+        nayin: Astro.naYin(Astro.jiaziIndex(p.stem, p.branch)),
         life: lifeStage(dm, p.branch),
+        kong: !isDay && dayKong.indexOf(p.branch) >= 0,
       };
-    }
-
-    // jiazi index per pillar for Na Yin
-    function jiaziOf(p) { // find n with n%10=stem, n%12=branch
-      for (let n = 0; n < 60; n++) if (n % 10 === p.stem && n % 12 === p.branch) return n;
-      return 0;
     }
 
     const out = {
@@ -120,18 +195,17 @@ const BaZi = (function () {
       },
       dayMaster: dm,
       dayMasterEl: CM.STEM_ELEMENT[dm],
+      standing: seasonStanding(CM.STEM_ELEMENT[dm], chart.month.branch),
+      kongBranches: dayKong,
       elementCount: elementCount(chart),
       solarTermNo: chart.solarTermNo,
     };
-    ["year", "month", "day", "hour"].forEach(k => {
-      const p = chart[k];
-      if (p && out.pillars[k]) out.pillars[k].nayin = Astro.naYin(jiaziOf(p));
-    });
     out.luck = luckPillars(dt, chart);
+    out.analysis = analyze(chart, out.standing);
     return out;
   }
 
-  return { compute, tenGod, lifeStage };
+  return { compute, tenGod, lifeStage, seasonStanding, analyze };
 })();
 
 if (typeof module !== "undefined") module.exports = BaZi;

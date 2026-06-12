@@ -163,11 +163,89 @@ CM.STAR_INFO = {
   9: { cn: "九紫", el: "Fire",   name: "You Bi 右弼",     nature: "Auspicious — joy, fame, future prosperity" },
 };
 
+/* Day-master persona 日主性格 (by stem index) */
+CM.DM_PERSONA = [
+  ["参天之木", "正直坚毅,有担当,喜领导而恶屈从", "Towering tree — upright and resolute, a natural leader who dislikes bending"],
+  ["花草之木", "柔韧灵活,善于应变,亲和而坚韧", "Flowering vine — flexible and adaptive, gentle yet tenacious"],
+  ["太阳之火", "热情开朗,光明磊落,感染力强", "The sun — warm, open-hearted and radiant, naturally inspiring"],
+  ["灯烛之火", "细腻专注,思虑深远,外柔内热", "Candle flame — delicate and focused, deep-thinking, quietly passionate"],
+  ["城墙之土", "稳重可靠,守信重诺,不易动摇", "City-wall earth — steady and dependable, true to their word"],
+  ["田园之土", "包容滋养,心思缜密,善于成全", "Garden soil — nurturing and meticulous, quietly supportive"],
+  ["刀剑之金", "果断刚毅,重情重义,雷厉风行", "Sword metal — decisive and righteous, swift in action"],
+  ["珠玉之金", "精致敏锐,自尊心强,追求完美", "Jewel metal — refined and perceptive, proud, perfectionist"],
+  ["江河之水", "胸怀宽广,智慧奔放,不拘小节", "River water — broad-minded with free-flowing intelligence"],
+  ["雨露之水", "聪颖内敛,温润细腻,韧性十足", "Dew water — subtle and intelligent, gentle and resilient"],
+];
+
+/* Remedial associations per element (for 喜用神 advice) */
+CM.ELEMENT_ADVICE = [
+  { dir: "东 East", color: "绿 green" },
+  { dir: "南 South", color: "红 red" },
+  { dir: "中/四隅 Center", color: "黄棕 yellow-brown" },
+  { dir: "西 West", color: "白金 white-gold" },
+  { dir: "北 North", color: "黑蓝 black-blue" },
+];
+
+/* Short keyword tag per flying star */
+CM.FS_STAR_TAG = {
+  1: "智慧人缘", 2: "病符忧患", 3: "口舌官非", 4: "文昌学业", 5: "灾祸意外",
+  6: "权威驿马", 7: "破财盗劫", 8: "财富置业", 9: "喜庆姻缘",
+};
+
+/* Classic mountain–water star pairings, keyed "min-max". score feeds rating. */
+CM.FS_COMBOS = {
+  "1-4": { score: 2, cn: "一四同宫,文昌科名", en: "1-4: scholarship, writing & romance flourish" },
+  "1-6": { score: 1.5, cn: "一六联珠,武贵文秀", en: "1-6: career authority and wisdom" },
+  "6-8": { score: 2, cn: "六八武库,富而且贵", en: "6-8: wealth with authority" },
+  "8-9": { score: 2, cn: "八九喜庆,旺财添丁", en: "8-9: prosperity and joyful events" },
+  "1-8": { score: 1, cn: "一八生成,利财利智", en: "1-8: steady gains and clear thinking" },
+  "4-9": { score: 1, cn: "四九合金,文采焕发", en: "4-9: creativity and refinement" },
+  "2-5": { score: -3, cn: "二五交加,病符五黄,最忌动作", en: "2-5: Sickness meets Five Yellow — avoid disturbing this sector" },
+  "5-5": { score: -3, cn: "双五黄临,灾祸之地,宜静不宜动", en: "5-5: double Five Yellow — keep quiet and undisturbed" },
+  "2-2": { score: -2, cn: "双二黑到,病符加重", en: "2-2: doubled sickness energy" },
+  "2-3": { score: -2, cn: "二三斗牛煞,是非官讼", en: "2-3: Bullfight Sha — quarrels and disputes" },
+  "6-7": { score: -2, cn: "六七交剑煞,争斗损伤", en: "6-7: Crossed Swords Sha — conflict and injury" },
+  "7-9": { score: -2, cn: "七九回禄,慎防火患", en: "7-9: fire hazard — take care with flames" },
+  "5-9": { score: -2, cn: "九紫生五黄,凶性愈炽", en: "5-9: Fire feeds the Five Yellow — intensified misfortune" },
+  "3-7": { score: -1.5, cn: "三七穿心,盗劫口舌", en: "3-7: robbery and slander" },
+  "8-8": { score: 2, cn: "双八到宫,旺气盈门", en: "8-8: doubled prosperity" },
+  "9-9": { score: 1.5, cn: "双九喜临,庆事重重", en: "9-9: doubled celebration" },
+  "1-1": { score: 1, cn: "双一白会,智慧清纯", en: "1-1: doubled clarity and benefactors" },
+};
+
 /* ---- 12 Officers 建除 ---- */
 CM.OFFICERS = [
   ["建", "Establish"], ["除", "Remove"], ["满", "Full"], ["平", "Balance"],
   ["定", "Stable"], ["执", "Initiate"], ["破", "Destruction"], ["危", "Danger"],
   ["成", "Success"], ["收", "Receive"], ["开", "Open"], ["闭", "Close"],
+];
+
+/* Conventional 宜/忌 (suitable / avoid) per Officer, index-aligned with OFFICERS */
+CM.OFFICER_YIJI = [
+  { yi: "出行、谒贵、上任 travel, audiences, taking office", ji: "动土、开仓、嫁娶 groundbreaking, opening stores, weddings" },
+  { yi: "除旧、沐浴、治病、扫舍 cleansing, bathing, healing", ji: "嫁娶、远行 weddings, long journeys" },
+  { yi: "祭祀、祈福、订婚 worship, blessings, engagements", ji: "动土、服药、上任 groundbreaking, taking medicine" },
+  { yi: "修路、平地、粉饰 road works, levelling, decorating", ji: "祈福、求嗣、开市 blessings, opening business" },
+  { yi: "订婚、嫁娶、开市、立约 engagements, weddings, contracts", ji: "诉讼、出行、移徙 lawsuits, travel, moving" },
+  { yi: "捕捉、纳财、立约 catching, receiving wealth, contracts", ji: "开仓、出货、移徙 opening stores, shipping, moving" },
+  { yi: "破屋、坏垣、治病 demolition, breaking, treating illness", ji: "诸吉事 all celebratory affairs" },
+  { yi: "祭祀、安床 worship, installing the bed", ji: "登高、行船、冒险 climbing, sailing, risk-taking" },
+  { yi: "开市、嫁娶、入学、上任 opening business, weddings, enrolment", ji: "诉讼 lawsuits" },
+  { yi: "纳财、收账、入仓 receiving wealth, collecting debts, storage", ji: "开市、出行、安葬 opening business, travel, burials" },
+  { yi: "开市、动工、嫁娶、入学 opening, construction, weddings", ji: "安葬、破土 burials, breaking ground" },
+  { yi: "安葬、筑堤、填坑 burials, dykes, filling pits", ji: "开市、出行、动土 opening business, travel, groundbreaking" },
+];
+
+/* Day-quality score per Officer (建除满平定执破危成收开闭):
+ * 2 大吉, 1 吉, 0 平, -1 凶, -2 大凶 */
+CM.OFFICER_SCORE = [0, 1, 1, 0, 1, 0, -2, -1, 2, 0, 2, -1];
+
+/* 煞 (Sha) direction by day-branch three-harmony triad:
+ * 申子辰煞南 · 寅午戌煞北 · 巳酉丑煞东 · 亥卯未煞西. Index = branch. */
+CM.SHA_DIR = [
+  ["南", "South"], ["东", "East"], ["北", "North"], ["西", "West"],
+  ["南", "South"], ["东", "East"], ["北", "North"], ["西", "West"],
+  ["南", "South"], ["东", "East"], ["北", "North"], ["西", "West"],
 ];
 
 /* ---- 28 Constellations 二十八宿 ---- */
